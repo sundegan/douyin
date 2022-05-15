@@ -3,6 +3,7 @@ package service
 import (
 	"douyin-server/dao"
 	"errors"
+	"gorm.io/gorm"
 )
 
 func Register(username, password string) (int64, error) {
@@ -26,8 +27,8 @@ func Register(username, password string) (int64, error) {
 
 func Login(username, password string) (int64, error) {
 	user := dao.User{}
-	dao.DB.Where("name = ?", username).Find(&user)
-	if user.Id == 0 {
+	err := dao.DB.Where("name = ?", username).Find(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, errors.New("用户不存在")
 	} else if password != user.Pwd {
 		return 0, errors.New("密码错误")
@@ -38,8 +39,8 @@ func Login(username, password string) (int64, error) {
 
 func UserInfo(token string) (dao.User, error) {
 	user := dao.User{}
-	dao.DB.Where("name = ?", token).Find(&user)
-	if user.Id == 0 {
+	err := dao.DB.Where("name = ?", token).Find(&user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, errors.New("用户不存在")
 	}
 	return user, nil

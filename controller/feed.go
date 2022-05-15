@@ -8,7 +8,7 @@ import (
 )
 
 type FeedResponse struct {
-	dao.Response
+	Response
 	VideoList []dao.Video `json:"video_list,omitempty"`
 	NextTime  int64       `json:"next_time,omitempty"`
 }
@@ -16,7 +16,7 @@ type FeedResponse struct {
 // Feed same demo video list for every request
 func Feed(c *gin.Context) {
 	c.JSON(http.StatusOK, FeedResponse{
-		Response:  dao.Response{StatusCode: 0},
+		Response:  Response{StatusCode: 0},
 		VideoList: DemoVideos,
 		NextTime:  time.Now().Unix(),
 	})

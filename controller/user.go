@@ -23,13 +23,13 @@ var usersLoginInfo = map[string]dao.User{
 }
 
 type UserLoginResponse struct {
-	dao.Response
+	Response
 	UserId int64  `json:"user_id,omitempty"`
 	Token  string `json:"token"`
 }
 
 type UserResponse struct {
-	dao.Response
+	Response
 	User dao.User `json:"user"`
 }
 
@@ -40,11 +40,11 @@ func Register(c *gin.Context) {
 	id, err := service.Register(username, password)
 	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: dao.Response{StatusCode: 1, StatusMsg: err.Error()},
+			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
 		})
 	} else {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: dao.Response{StatusCode: 0},
+			Response: Response{StatusCode: 0},
 			UserId:   id,
 			Token:    username,
 		})
@@ -58,11 +58,11 @@ func Login(c *gin.Context) {
 	id, err := service.Login(username, password)
 	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: dao.Response{StatusCode: 1, StatusMsg: err.Error()},
+			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
 		})
 	} else {
 		c.JSON(http.StatusOK, UserLoginResponse{
-			Response: dao.Response{StatusCode: 0},
+			Response: Response{StatusCode: 0},
 			UserId:   id,
 			Token:    username,
 		})
@@ -75,11 +75,11 @@ func UserInfo(c *gin.Context) {
 	user, err := service.UserInfo(token)
 	if err != nil {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: dao.Response{StatusCode: 1, StatusMsg: err.Error()},
+			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
 		})
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
-			Response: dao.Response{StatusCode: 0},
+			Response: Response{StatusCode: 0},
 			User:     user,
 		})
 	}

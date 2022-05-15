@@ -1,10 +1,5 @@
 package dao
 
-type Response struct {
-	StatusCode int32  `json:"status_code"`
-	StatusMsg  string `json:"status_msg,omitempty"`
-}
-
 type Video struct {
 	Id            int64  `json:"id,omitempty"`
 	Author        User   `json:"author"`
@@ -21,6 +16,8 @@ type Comment struct {
 	Content    string `json:"content,omitempty"`
 	CreateDate string `json:"create_date,omitempty"`
 }
+
+// lkh:跟demo比增加了Pwd字段储存密码
 
 type User struct {
 	Id            int64  `json:"id,omitempty" gorm:"primaryKey"`
