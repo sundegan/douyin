@@ -22,7 +22,8 @@ type Comment struct {
 type User struct {
 	Id            int64  `json:"id,omitempty" gorm:"primaryKey"`
 	Name          string `json:"name,omitempty" gorm:"type:varchar(32); index"`
-	Pwd           string `json:",omitempty" gorm:"type:varchar(32)"`
+	Pwd           string `json:",omitempty" gorm:"type:char(60)"`
+	Salt          string `json:",omitempty" gorm:"type:char(4)"`
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`
