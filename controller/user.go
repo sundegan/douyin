@@ -38,6 +38,7 @@ func Register(c *gin.Context) {
 	password := c.Query("password")
 
 	id, err := service.Register(username, password)
+	token := service.CreateToken(id)
 	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
@@ -46,7 +47,7 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 0},
 			UserId:   id,
-			Token:    username,
+			Token:    token,
 		})
 	}
 }
@@ -56,6 +57,7 @@ func Login(c *gin.Context) {
 	password := c.Query("password")
 
 	id, err := service.Login(username, password)
+	token := service.CreateToken(id)
 	if err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
@@ -64,7 +66,7 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			Response: Response{StatusCode: 0},
 			UserId:   id,
-			Token:    username,
+			Token:    token,
 		})
 	}
 }

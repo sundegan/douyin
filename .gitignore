@@ -21,3 +21,7 @@
 go.work
 
 .idea
+
+# videos
+*.mp4
+*.mkv
