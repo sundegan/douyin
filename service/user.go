@@ -55,7 +55,7 @@ func Login(username, password string) (int64, error) {
 	return user.Id, nil
 }
 
-func UserInfo(token string) (dao.User, error) {
+func UserInfo(token int64) (dao.User, error) {
 	user := dao.User{}
 	id, ok := CheckToken(token)
 	if !ok {
@@ -69,31 +69,31 @@ func UserInfo(token string) (dao.User, error) {
 }
 
 // CreateToken 生成随机token，并存储到redis中，返回token
-func CreateToken(id int64) (token string) {
+func CreateToken(id int64) (token int64) {
 	// redis存储64位整数更节省空间
-	numToken := rand.Uint64()
+	token = int64(rand.Uint64())
 
 	// 检测token有无冲突
-	_, err := dao.RDB.Get(dao.Ctx, strconv.FormatInt(int64(numToken), 10)).Result()
+	_, err := dao.RDB.Get(dao.Ctx, strconv.FormatInt(token, 10)).Result()
 	for err == nil {
-		numToken = rand.Uint64()
-		_, err = dao.RDB.Get(dao.Ctx, strconv.FormatInt(int64(numToken), 10)).Result()
+		token = int64(rand.Uint64())
+		_, err = dao.RDB.Get(dao.Ctx, strconv.FormatInt(token, 10)).Result()
 	}
 
-	token = strconv.FormatInt(int64(numToken), 10)
-	dao.RDB.Set(dao.Ctx, token, id, 12*time.Hour)
+	dao.RDB.Set(dao.Ctx, strconv.FormatInt(token, 10), id, 12*time.Hour)
 
 	return
 }
 
 // CheckToken 检测token是否存在，存在就返回id，且自动续期，否则返回的ok为false
-func CheckToken(token string) (id int64, ok bool) {
-	sID, err := dao.RDB.Get(dao.Ctx, token).Result()
+func CheckToken(token int64) (id int64, ok bool) {
+	sToken := strconv.FormatInt(token, 10)
+	sID, err := dao.RDB.Get(dao.Ctx, sToken).Result()
 	if err != nil {
 		return 0, false
 	}
 
-	dao.RDB.Expire(dao.Ctx, token, 12*time.Hour)
+	dao.RDB.Expire(dao.Ctx, sToken, 12*time.Hour)
 	id, _ = strconv.ParseInt(sID, 10, 64)
 	return id, true
 }

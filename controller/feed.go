@@ -33,9 +33,9 @@ func Feed(c *gin.Context) {
 			VideoList: videoList,
 			NextTime:  nextTime,
 		})
+	} else {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response: Response{StatusCode: 0},
+		})
 	}
-	// 已经没有视频了
-	c.JSON(http.StatusOK, FeedResponse{
-		Response: Response{StatusCode: 0},
-	})
 }

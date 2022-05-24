@@ -5,6 +5,7 @@ import (
 	"douyin-server/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 // lkh：仅有最基本的注册登录以及返回基本信息
@@ -24,8 +25,8 @@ var usersLoginInfo = map[string]dao.User{
 
 type UserLoginResponse struct {
 	Response
-	UserId int64  `json:"user_id,omitempty"`
-	Token  string `json:"token"`
+	UserId int64 `json:"user_id,omitempty"`
+	Token  int64 `json:"token"`
 }
 
 type UserResponse struct {
@@ -72,7 +73,14 @@ func Login(c *gin.Context) {
 }
 
 func UserInfo(c *gin.Context) {
-	token := c.Query("token")
+	_token := c.Query("token")
+	token, err := strconv.ParseInt(_token, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusOK, UserResponse{
+			Response: Response{StatusCode: 1, StatusMsg: err.Error()},
+		})
+		return
+	}
 
 	user, err := service.UserInfo(token)
 	if err != nil {
