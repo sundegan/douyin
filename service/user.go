@@ -68,12 +68,12 @@ func UserInfo(token string) (dao.User, error) {
 	return user, nil
 }
 
-// CreateToken lkh：生成随机token，并存储到redis中，返回token
+// CreateToken 生成随机token，并存储到redis中，返回token
 func CreateToken(id int64) (token string) {
 	// redis存储64位整数更节省空间
 	numToken := rand.Uint64()
 
-	// lkh：检测token有无冲突
+	// 检测token有无冲突
 	_, err := dao.RDB.Get(dao.Ctx, strconv.FormatInt(int64(numToken), 10)).Result()
 	for err == nil {
 		numToken = rand.Uint64()
@@ -81,24 +81,24 @@ func CreateToken(id int64) (token string) {
 	}
 
 	token = strconv.FormatInt(int64(numToken), 10)
-	dao.RDB.Set(dao.Ctx, token, id, 24*time.Hour)
+	dao.RDB.Set(dao.Ctx, token, id, 12*time.Hour)
 
 	return
 }
 
-// CheckToken lkh：检测token是否存在，存在就返回id，且自动续期，否则返回的ok为false
+// CheckToken 检测token是否存在，存在就返回id，且自动续期，否则返回的ok为false
 func CheckToken(token string) (id int64, ok bool) {
 	sID, err := dao.RDB.Get(dao.Ctx, token).Result()
 	if err != nil {
 		return 0, false
 	}
 
-	dao.RDB.PExpire(dao.Ctx, token, 24*time.Hour)
+	dao.RDB.Expire(dao.Ctx, token, 12*time.Hour)
 	id, _ = strconv.ParseInt(sID, 10, 64)
 	return id, true
 }
 
-// lkh：随机盐长度固定为4
+// 随机盐长度固定为4
 func randSalt() string {
 	buf := strings.Builder{}
 	for i := 0; i < 4; i++ {

@@ -1,13 +1,17 @@
 package dao
 
+import "time"
+
 type Video struct {
-	Id            int64  `json:"id,omitempty"`
-	Author        User   `json:"author"`
-	PlayUrl       string `json:"play_url" json:"play_url,omitempty"`
-	CoverUrl      string `json:"cover_url,omitempty"`
-	FavoriteCount int64  `json:"favorite_count,omitempty"`
-	CommentCount  int64  `json:"comment_count,omitempty"`
-	IsFavorite    bool   `json:"is_favorite,omitempty"`
+	Id            int64     `json:"id,omitempty"`
+	CreatedAt     time.Time `json:"-" gorm:"index"`
+	AuthorId      int64     `json:"-"`
+	Author        User      `json:"author"`
+	PlayUrl       string    `json:"play_url,omitempty" gorm:"type:varchar(100)"`
+	CoverUrl      string    `json:"cover_url,omitempty" gorm:"type:varchar(100)"`
+	FavoriteCount int64     `json:"favorite_count,omitempty"`
+	CommentCount  int64     `json:"comment_count,omitempty"`
+	IsFavorite    bool      `json:"is_favorite,omitempty"`
 }
 
 type Comment struct {
@@ -17,13 +21,11 @@ type Comment struct {
 	CreateDate string `json:"create_date,omitempty"`
 }
 
-// lkh:跟demo比增加了Pwd字段储存密码
-
 type User struct {
 	Id            int64  `json:"id,omitempty" gorm:"primaryKey"`
 	Name          string `json:"name,omitempty" gorm:"type:varchar(32); index"`
-	Pwd           string `json:",omitempty" gorm:"type:char(60)"`
-	Salt          string `json:",omitempty" gorm:"type:char(4)"`
+	Pwd           string `json:"-" gorm:"type:char(60)"`
+	Salt          string `json:"-" gorm:"type:char(4)"`
 	FollowCount   int64  `json:"follow_count,omitempty"`
 	FollowerCount int64  `json:"follower_count,omitempty"`
 	IsFollow      bool   `json:"is_follow,omitempty"`

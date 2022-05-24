@@ -2,9 +2,10 @@ package controller
 
 import (
 	"douyin-server/dao"
+	"douyin-server/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
+	"strconv"
 )
 
 type FeedResponse struct {
@@ -13,11 +14,28 @@ type FeedResponse struct {
 	NextTime  int64       `json:"next_time,omitempty"`
 }
 
-// Feed same demo video list for every request
 func Feed(c *gin.Context) {
+	_latestTime := c.Query("latest_time")
+	latestTime, err := strconv.ParseInt(_latestTime, 10, 64)
+	// 说明时间戳格式有错
+	if err != nil {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response: Response{StatusCode: 1},
+		})
+		return
+	}
+
+	videoList, nextTime := service.Feed(latestTime)
+	// 说明有找到视频
+	if nextTime != 0 {
+		c.JSON(http.StatusOK, FeedResponse{
+			Response:  Response{StatusCode: 0},
+			VideoList: videoList,
+			NextTime:  nextTime,
+		})
+	}
+	// 已经没有视频了
 	c.JSON(http.StatusOK, FeedResponse{
-		Response:  Response{StatusCode: 0},
-		VideoList: DemoVideos,
-		NextTime:  time.Now().Unix(),
+		Response: Response{StatusCode: 0},
 	})
 }

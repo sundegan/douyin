@@ -25,7 +25,7 @@ func InitDB() {
 		panic(err)
 	}
 
-	DB.AutoMigrate(&User{})
+	DB.AutoMigrate(&User{}, &Video{})
 
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     "192.168.200.128:7000",
