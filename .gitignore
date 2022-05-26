@@ -19,9 +19,12 @@
 
 # Go workspace file
 go.work
-
+.vscode
 .idea
 
 # videos
 *.mp4
 *.mkv
+
+# covers
+*.jpg
