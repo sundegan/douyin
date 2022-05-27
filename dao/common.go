@@ -22,7 +22,8 @@ type Comment struct {
 }
 
 type User struct {
-	Id            int64  `json:"id,omitempty" gorm:"primaryKey"`
+	// json屏蔽id、密码、随机盐字段
+	Id            int64  `json:"-" gorm:"primaryKey"`
 	Name          string `json:"name,omitempty" gorm:"type:varchar(32); index"`
 	Pwd           string `json:"-" gorm:"type:char(60)"`
 	Salt          string `json:"-" gorm:"type:char(4)"`

@@ -19,9 +19,7 @@ func Feed(c *gin.Context) {
 	latestTime, err := strconv.ParseInt(_latestTime, 10, 64)
 	// 说明时间戳格式有错
 	if err != nil {
-		c.JSON(http.StatusOK, FeedResponse{
-			Response: Response{StatusCode: 1},
-		})
+		c.JSON(http.StatusOK, Response{StatusCode: 1})
 		return
 	}
 
@@ -34,8 +32,6 @@ func Feed(c *gin.Context) {
 			NextTime:  nextTime,
 		})
 	} else {
-		c.JSON(http.StatusOK, FeedResponse{
-			Response: Response{StatusCode: 0},
-		})
+		c.JSON(http.StatusOK, Response{StatusCode: 0})
 	}
 }

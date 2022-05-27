@@ -4,12 +4,11 @@ import (
 	"douyin-server/dao"
 	"douyin-server/service"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"os/exec"
 	"path/filepath"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type VideoListResponse struct {
@@ -19,19 +18,19 @@ type VideoListResponse struct {
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
-	token_ := c.PostForm("token")
-	token, err := strconv.ParseInt(token_, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			StatusMsg:  err.Error(),
-		})
-	}
-	id, ok := service.CheckToken(token)
+	_id, ok := c.Get("id")
 	if !ok {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}
+
+	id, ok := _id.(int64)
+	if !ok {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
+		log.Println("出现无法解析成64位整数的token")
+		return
+	}
+
 	data, err := c.FormFile("data")
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
@@ -42,8 +41,7 @@ func Publish(c *gin.Context) {
 	}
 
 	filename := filepath.Base(data.Filename)
-	user := usersLoginInfo[token_]
-	finalName := fmt.Sprintf("%d_%s", user.Id, filename)
+	finalName := fmt.Sprintf("%d_%s", id, filename)
 	saveFile := filepath.Join("./public/videos/", finalName)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{

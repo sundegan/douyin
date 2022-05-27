@@ -12,6 +12,18 @@ import (
 	"time"
 )
 
+// LoginLimit 中间件服务，限制注册登录操作过于频繁。
+func LoginLimit(ipAddress string) bool {
+	// 错误可忽略
+	times, _ := dao.RDB.Get(dao.Ctx, ipAddress).Int64()
+	if times > 10 {
+		return false
+	} else {
+		dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)
+	}
+	return true
+}
+
 func Register(username, password string) (int64, error) {
 	if len(username) > 32 {
 		return 0, errors.New("用户名过长，不可超过32位")
@@ -55,12 +67,8 @@ func Login(username, password string) (int64, error) {
 	return user.Id, nil
 }
 
-func UserInfo(token int64) (dao.User, error) {
+func UserInfo(id int64) (dao.User, error) {
 	user := dao.User{}
-	id, ok := CheckToken(token)
-	if !ok {
-		return user, errors.New("登陆已过期")
-	}
 	err := dao.DB.Where("id = ?", id).Find(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, errors.New("用户不存在")
@@ -83,19 +91,6 @@ func CreateToken(id int64) (token int64) {
 	dao.RDB.Set(dao.Ctx, strconv.FormatInt(token, 10), id, 12*time.Hour)
 
 	return
-}
-
-// CheckToken 检测token是否存在，存在就返回id，且自动续期，否则返回的ok为false
-func CheckToken(token int64) (id int64, ok bool) {
-	sToken := strconv.FormatInt(token, 10)
-	sID, err := dao.RDB.Get(dao.Ctx, sToken).Result()
-	if err != nil {
-		return 0, false
-	}
-
-	dao.RDB.Expire(dao.Ctx, sToken, 12*time.Hour)
-	id, _ = strconv.ParseInt(sID, 10, 64)
-	return id, true
 }
 
 // 随机盐长度固定为4

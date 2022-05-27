@@ -14,6 +14,7 @@ func Feed(latestTime int64) (videoList []dao.Video, nextTime int64) {
 	if len(videoList) == 0 {
 		return
 	}
-	nextTime = videoList[0].CreatedAt.UnixMilli()
+	// 返回这次视频最近的投稿时间-1，下次即可获取比这次视频旧的视频
+	nextTime = videoList[0].CreatedAt.UnixMilli() - 1
 	return
 }

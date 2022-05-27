@@ -17,7 +17,7 @@ var (
 
 func InitDB() {
 	var err error
-	dsn := "debian-sys-maint:2o2U5fxdnadNXZhq@tcp(localhost:3306)/" +
+	dsn := "root:zxc05020519@tcp(192.168.200.128:23306)/" +
 		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
@@ -29,8 +29,8 @@ func InitDB() {
 	DB.AutoMigrate(&User{}, &Video{})
 
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
+		Addr:     "192.168.200.128:7000",
+		Password: "zxc05020519",
 		DB:       0,
 	})
 	Ctx = context.Background()

@@ -4,7 +4,7 @@ import (
 	"douyin-server/dao"
 )
 
-const staticRouter = "http://172.25.151.124:3000/static/"
+const staticRouter = "http://10.0.2.2:8080/static/"
 
 func Publish(filename, title string, user_id int64) error {
 
