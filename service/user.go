@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"douyin-server/dao"
 	"errors"
+	"github.com/bits-and-blooms/bloom/v3"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"math/rand"
@@ -11,6 +12,29 @@ import (
 	"strings"
 	"time"
 )
+
+var (
+	userFilter *bloom.BloomFilter
+)
+
+// InitUser 等dao包初始化完才能初始化
+func InitUser() {
+	// 支持10000000个用户
+	userFilter = bloom.NewWithEstimates(1e7, 0.01)
+
+	rows, err := dao.DB.Model(dao.User{}).Select("name").Rows()
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	// 将数据库中所有用户名存在布隆过滤器中
+	var name string
+	for rows.Next() {
+		rows.Scan(&name)
+		userFilter.AddString(name)
+	}
+}
 
 // LoginLimit 中间件服务，限制注册登录操作过于频繁。
 func LoginLimit(ipAddress string) bool {
@@ -53,15 +77,21 @@ func Register(username, password string) (int64, error) {
 	user.Pwd = string(pwd)
 
 	dao.DB.Create(&user)
+
+	userFilter.AddString(username)
+
 	return user.Id, nil
 }
 
 func Login(username, password string) (int64, error) {
+	// 先查布隆过滤器，不存在直接返回错误，降低数据库的压力
+	if !userFilter.TestString(username) {
+		return 0, errors.New("用户名或密码错误")
+	}
+
 	user := dao.User{}
-	err := dao.DB.Where("name = ?", username).Find(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return 0, errors.New("用户不存在")
-	} else if err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
+	dao.DB.Where("name = ?", username).Find(&user)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
 		return 0, errors.New("用户名或密码错误")
 	}
 	return user.Id, nil
