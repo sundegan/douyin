@@ -2,11 +2,13 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"douyin-server/dao"
 	"errors"
 	"github.com/bits-and-blooms/bloom/v3"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -31,7 +33,10 @@ func InitUser() {
 	// 将数据库中所有用户名存在布隆过滤器中
 	var name string
 	for rows.Next() {
-		rows.Scan(&name)
+		err = rows.Scan(&name)
+		if err != nil {
+			log.Println("读取用户名到布隆过滤器时发生错误：", err)
+		}
 		userFilter.AddString(name)
 	}
 }
@@ -90,8 +95,23 @@ func Login(username, password string) (int64, error) {
 	}
 
 	user := dao.User{}
+
+	// 再查缓存
+	var buf []byte
+	err := dao.LoginCache.Get(context.Background(), username, &buf)
+	if err == nil {
+		err = json.Unmarshal(buf, &user)
+		if err == nil {
+			if err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
+				return 0, errors.New("用户名或密码错误")
+			}
+			return user.Id, nil
+		}
+	}
+
+	//缓存未命中，查数据库
 	dao.DB.Where("name = ?", username).Find(&user)
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
 		return 0, errors.New("用户名或密码错误")
 	}
 	return user.Id, nil

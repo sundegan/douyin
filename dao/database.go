@@ -2,17 +2,26 @@ package dao
 
 import (
 	"context"
-
+	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
+	"time"
 )
 
 var (
 	DB *gorm.DB
 
-	RDB *redis.Client
-	Ctx context.Context
+	RDB        *redis.Client
+	Ctx        context.Context
+	LoginCache *cache.Cache
+)
+
+// Redis数据库编号
+const (
+	numTokenDB = iota
+	numLoginCacheDB
 )
 
 func InitDB() {
@@ -26,12 +35,22 @@ func InitDB() {
 		panic(err)
 	}
 
-	DB.AutoMigrate(&User{}, &Video{})
+	err = DB.AutoMigrate(&User{}, &Video{})
+	log.Println(err)
 
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     "192.168.200.128:7000",
 		Password: "zxc05020519",
-		DB:       0,
+		DB:       numTokenDB,
 	})
 	Ctx = context.Background()
+
+	LoginCache = cache.New(&cache.Options{
+		Redis: redis.NewClient(&redis.Options{
+			Addr:     "192.168.200.128:7000",
+			Password: "zxc05020519",
+			DB:       numLoginCacheDB,
+		}),
+		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+	})
 }

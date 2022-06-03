@@ -48,9 +48,14 @@ func LoginLimit(c *gin.Context) {
 
 // VerifyToken 验证token中间件，成功会将用户id写入gin上下文中，否则会直接拦截请求
 func VerifyToken(c *gin.Context) {
-	token, ok := c.GetQuery("token")
+	// 使用参数绑定，适应query和form两种提交方式
+	t := struct {
+		Token string `json:"token" form:"token"`
+	}{}
+
+	err := c.ShouldBind(&t)
 	// 误用中间件，直接跳过
-	if !ok {
+	if err != nil {
 		return
 	}
 
@@ -63,10 +68,10 @@ func VerifyToken(c *gin.Context) {
 		return
 	}
 
-	_id, err := dao.RDB.Get(dao.Ctx, token).Result()
+	_id, err := dao.RDB.Get(dao.Ctx, t.Token).Result()
 	if err == nil {
 		// token续期
-		dao.RDB.Expire(dao.Ctx, token, 12*time.Hour)
+		dao.RDB.Expire(dao.Ctx, t.Token, 12*time.Hour)
 	} else {
 		// token不存在，记录该ip此次访问
 		dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)

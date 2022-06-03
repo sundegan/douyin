@@ -10,6 +10,7 @@ func Publish(filename, title string, user_id int64) error {
 
 	v := dao.Video{
 		AuthorId: user_id,
+		Title:    title,
 		PlayUrl:  staticRouter + "videos/" + filename,
 		CoverUrl: staticRouter + "covers/" + filename,
 	}
