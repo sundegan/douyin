@@ -42,3 +42,9 @@ type User struct {
 	Name           string `json:"name,omitempty" gorm:"type:varchar(32); index"`
 	Pwd            string `json:"pwd,omitempty" gorm:"type:char(60)"`
 }
+
+type Favorite struct {
+	Id      int64 `json:"id,omitempty" gorm:"primaryKey"`
+	UserId  int64 `json:"-"`
+	VideoId int64 `json:"-"`
+}

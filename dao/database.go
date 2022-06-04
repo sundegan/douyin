@@ -26,7 +26,7 @@ const (
 
 func InitDB() {
 	var err error
-	dsn := "root:zxc05020519@tcp(192.168.200.128:23306)/" +
+	dsn := "root:1234@tcp(127.0.0.1:3306)/" +
 		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
@@ -35,20 +35,20 @@ func InitDB() {
 		panic(err)
 	}
 
-	err = DB.AutoMigrate(&User{}, &Video{})
+	err = DB.AutoMigrate(&User{}, &Video{}, &Favorite{})
 	log.Println(err)
 
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     "192.168.200.128:7000",
-		Password: "zxc05020519",
+		Addr:     "127.0.0.1:6379",
+		Password: "",
 		DB:       numTokenDB,
 	})
 	Ctx = context.Background()
 
 	LoginCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
-			Addr:     "192.168.200.128:7000",
-			Password: "zxc05020519",
+			Addr:     "127.0.0.1:6379",
+			Password: "",
 			DB:       numLoginCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(1000, time.Minute),
