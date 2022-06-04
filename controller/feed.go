@@ -15,6 +15,10 @@ type FeedResponse struct {
 }
 
 func Feed(c *gin.Context) {
+	_id, _ := c.Get("id")
+
+	id, _ := _id.(int64)
+
 	_latestTime := c.Query("latest_time")
 	latestTime, err := strconv.ParseInt(_latestTime, 10, 64)
 	// 说明时间戳格式有错
@@ -23,7 +27,7 @@ func Feed(c *gin.Context) {
 		return
 	}
 
-	videoList, nextTime := service.Feed(latestTime)
+	videoList, nextTime := service.Feed(id, latestTime)
 	// 说明有找到视频
 	if nextTime != 0 {
 		c.JSON(http.StatusOK, FeedResponse{

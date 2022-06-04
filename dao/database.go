@@ -35,7 +35,7 @@ func InitDB() {
 		panic(err)
 	}
 
-	err = DB.AutoMigrate(&User{}, &Video{})
+	err = DB.AutoMigrate(&User{}, &Video{}, &Favorite{})
 	log.Println(err)
 
 	RDB = redis.NewClient(&redis.Options{

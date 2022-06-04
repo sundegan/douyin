@@ -29,3 +29,8 @@ type Comment struct {
 	Content    string `json:"content,omitempty"`
 	CreateDate string `json:"create_date,omitempty"`
 }
+
+type Favorite struct {
+	UserId  int64 `json:"-" gorm:"primaryKey;autoIncrement:false"`
+	VideoId int64 `json:"-" gorm:"primaryKey;autoIncrement:false"`
+}
