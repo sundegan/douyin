@@ -69,9 +69,14 @@ func Publish(c *gin.Context) {
 
 }
 
-// PublishList all users have same publish video list
+
 func PublishList(c *gin.Context) {
-	videoList := service.PublishList()
+	id, ok := getId(c)
+	if !ok {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
+		return
+	}
+	videoList := service.PublishList(id)
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
