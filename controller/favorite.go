@@ -10,16 +10,9 @@ import (
 )
 
 func FavoriteAction(c *gin.Context) {
-	_id, ok := c.Get("id")
+	id, ok := getId(c)
 	if !ok {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		return
-	}
-
-	id, ok := _id.(int64)
-	if !ok {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		log.Println("出现无法解析成64位整数的token")
 		return
 	}
 
@@ -42,16 +35,9 @@ func FavoriteAction(c *gin.Context) {
 }
 
 func FavoriteList(c *gin.Context) {
-	_id, ok := c.Get("id")
+	id, ok := getId(c)
 	if !ok {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		return
-	}
-
-	id, ok := _id.(int64)
-	if !ok {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		log.Println("出现无法解析成64位整数的token")
 		return
 	}
 

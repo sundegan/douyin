@@ -7,15 +7,23 @@ import (
 )
 
 func Favorite(video_id int64, user_id int64, action_type string) error {
-	user := dao.User{}
-	err := dao.DB.Where("id = ?", user_id).Find(&user).Error
+	video := dao.Video{}
+	err := dao.DB.Model(&dao.Video{}).Where("id = ?", video_id).
+		Select("author_id", "favorite_count").Find(&video).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("点赞的视频不存在")
+	}
+
+	userFavoriteCount, authorTotalFavorited := 0, 0
+	err = dao.DB.Model(&dao.User{}).Where("id = ?", user_id).
+		Select("favorite_count").Find(&userFavoriteCount).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("执行点赞操作的用户不存在")
 	}
-	video := dao.Video{}
-	err = dao.DB.Where("id = ?", video_id).Find(&video).Error
+	err = dao.DB.Model(&dao.User{}).Where("id = ?", video.AuthorId).
+		Select("total_favorited").Find(&authorTotalFavorited).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("点赞的视频不存在")
+		return errors.New("视频的作者不存在")
 	}
 
 	if action_type == "1" {
@@ -27,8 +35,9 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 			return errors.New("已点赞过该视频")
 		}
 
-		user.FavoriteCount++
+		userFavoriteCount++
 		video.FavoriteCount++
+		authorTotalFavorited++
 
 		favorite := dao.Favorite{
 			UserId:  user_id,
@@ -40,14 +49,15 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 		}
 	} else if action_type == "2" {
 
-		if user.FavoriteCount <= 0 {
+		if userFavoriteCount <= 0 {
 			return errors.New("取消点赞异常，用户点赞数为非正数")
 		} else if video.FavoriteCount <= 0 {
 			return errors.New("取消点赞异常，视频点赞数为非正数")
 		}
 
-		user.FavoriteCount--
+		userFavoriteCount--
 		video.FavoriteCount--
+		authorTotalFavorited--
 
 		favorite := dao.Favorite{}
 
@@ -57,14 +67,19 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 		}
 	}
 
-	err = dao.DB.Save(&user).Error
+	err = dao.DB.Model(&dao.Video{}).Where("id = ?", video_id).Update("favorite_count", video.FavoriteCount).Error
+	if err != nil {
+		return errors.New("视频点赞数修改失败")
+	}
+
+	err = dao.DB.Model(&dao.User{}).Where("id = ?", user_id).Update("favorite_count", userFavoriteCount).Error
 	if err != nil {
 		return errors.New("用户点赞数修改失败")
 	}
 
-	err = dao.DB.Save(&video).Error
+	err = dao.DB.Model(&dao.User{}).Where("id = ?", video.AuthorId).Update("total_favorited", authorTotalFavorited).Error
 	if err != nil {
-		return errors.New("视频点赞数修改失败")
+		return errors.New("作者被点赞数修改失败")
 	}
 
 	return nil

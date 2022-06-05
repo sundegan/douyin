@@ -5,7 +5,6 @@ import (
 	"douyin-server/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"os/exec"
 	"path/filepath"
@@ -18,17 +17,9 @@ type VideoListResponse struct {
 
 // Publish check token then save upload file to public directory
 func Publish(c *gin.Context) {
-
-	_id, ok := c.Get("id")
+	id, ok := getId(c)
 	if !ok {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		return
-	}
-
-	id, ok := _id.(int64)
-	if !ok {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
-		log.Println("出现无法解析成64位整数的token")
 		return
 	}
 
