@@ -29,7 +29,7 @@ func Publish(filename, title string, user_id int64, is_generate_ok bool) error {
 	return nil
 }
 
-func PublishList() (videoList []dao.Video) {
-	dao.DB.Model(&dao.Video{}).Joins("left join users on videos.id = users.id").Order("created_at desc").Find(&videoList)
+func PublishList(id int64) (videoList []dao.Video) {
+	dao.DB.Model(&dao.Video{}).Where("author_id = ?", id).Order("created_at desc").Find(&videoList)
 	return
 }
