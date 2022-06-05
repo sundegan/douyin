@@ -17,6 +17,11 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("点赞的视频不存在")
 	}
+	author := dao.User{}
+	err = dao.DB.Where("id = ?", video.AuthorId).Find(&author).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("视频的作者不存在")
+	}
 
 	if action_type == "1" {
 		rows, err := dao.DB.Table("favorites").Where("user_id = ? AND video_id = ?", user_id, video_id).Rows()
@@ -29,6 +34,7 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 
 		user.FavoriteCount++
 		video.FavoriteCount++
+		author.TotalFavorited++
 
 		favorite := dao.Favorite{
 			UserId:  user_id,
@@ -65,6 +71,11 @@ func Favorite(video_id int64, user_id int64, action_type string) error {
 	err = dao.DB.Save(&video).Error
 	if err != nil {
 		return errors.New("视频点赞数修改失败")
+	}
+
+	err = dao.DB.Save(&author).Error
+	if err != nil {
+		return errors.New("作者被点赞数修改失败")
 	}
 
 	return nil
