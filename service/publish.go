@@ -17,6 +17,5 @@ func Publish(filename, title string, user_id int64) error {
 	if err := dao.DB.Create(&v).Error; err != nil {
 		return err
 	}
-
 	return nil
 }

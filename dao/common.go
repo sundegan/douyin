@@ -24,10 +24,13 @@ type Video struct {
 }
 
 type Comment struct {
-	Id         int64  `json:"id,omitempty"`
-	User       User   `json:"user"`
-	Content    string `json:"content,omitempty"`
-	CreateDate string `json:"create_date,omitempty"`
+	Id         int64  `json:"id,omitempty" gorm:"primaryKey"`
+	UserId     int64  `json:"-"`
+	Content    string `json:"content,omitempty" gorm:"type:text"`
+	CreateDate string `json:"create_date,omitempty" gorm:"type:varchar(20)"`
+	VideoId    int64  `json:"video_id"`
+
+	User User `json:"user"`
 }
 
 type Favorite struct {

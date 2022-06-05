@@ -2,8 +2,11 @@ package controller
 
 import (
 	"douyin-server/dao"
+	"douyin-server/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type CommentListResponse struct {
@@ -16,27 +19,64 @@ type CommentActionResponse struct {
 	Comment dao.Comment `json:"comment,omitempty"`
 }
 
-// CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.Query("token")
+	_id, ok := c.Get("id")
+	if !ok {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
+		return
+	}
+
+	id, ok := _id.(int64)
+	if !ok {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
+		log.Println("出现无法解析成64位整数的token")
+		return
+	}
+
+	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
+		log.Println("出现无法解析成64位整数的视频id")
+		return
+	}
+
 	actionType := c.Query("action_type")
 
-	if user, exist := usersLoginInfo[token]; exist {
-		if actionType == "1" {
-			text := c.Query("comment_text")
-			c.JSON(http.StatusOK, CommentActionResponse{Response: Response{StatusCode: 0},
-				Comment: dao.Comment{
-					Id:         1,
-					User:       user,
-					Content:    text,
-					CreateDate: "05-01",
-				}})
+	if actionType == "1" {
+		comment_text := c.Query("comment_text")
+		comment, err := service.Comment(video_id, id, comment_text)
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "评论异常"},
+			})
+			return
+		} else {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0},
+				Comment:  comment,
+			})
 			return
 		}
-		c.JSON(http.StatusOK, Response{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "User doesn't exist"})
+	} else if actionType == "2" {
+		comment_id, err := strconv.ParseInt(c.Query("comment_id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取评论id失败"})
+			log.Println("出现无法解析成64位整数的视频id")
+			return
+		}
+		err = service.DeleteComment(comment_id)
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 1, StatusMsg: "删除评论异常"},
+			})
+			return
+		} else {
+			c.JSON(http.StatusOK, CommentActionResponse{
+				Response: Response{StatusCode: 0},
+			})
+		}
 	}
+
 }
 
 // CommentList all videos have same demo comment list
