@@ -3,11 +3,14 @@ package controller
 import (
 	"douyin-server/dao"
 	"douyin-server/service"
+	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type VideoListResponse struct {
@@ -33,20 +36,26 @@ func Publish(c *gin.Context) {
 	}
 
 	filename := filepath.Base(data.Filename)
+	fileSuffix := filepath.Ext(data.Filename)
 	finalName := fmt.Sprintf("%d_%s", id, filename)
-	saveFile := filepath.Join("./static-server/videos/", finalName)
-	if err = c.SaveUploadedFile(data, saveFile); err != nil {
+	saveFile := filepath.Join("./public/videos/", finalName)
+	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
 		})
 		return
 	}
-	saveCover := filepath.Join("./static-server/covers", finalName[:len(finalName)-3]+"jpg")
-	cmd := exec.Command("ffmpeg", "-i", saveFile, "-ss", "0", "-f", "image2", saveCover)
-	err = cmd.Run()
 
-	if err = service.Publish(finalName, c.PostForm("title"), id); err != nil {
+	saveCover := filepath.Join("./public/covers", strings.TrimSuffix(finalName, fileSuffix)+".jpg")
+
+	err = coverGenerater(saveFile, saveCover)
+	isGenerateOK := true
+	if err != nil {
+		fmt.Print(err)
+		isGenerateOK = false
+	}
+	if err := service.Publish(finalName, c.PostForm("title"), id, isGenerateOK); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
@@ -62,10 +71,21 @@ func Publish(c *gin.Context) {
 
 // PublishList all users have same publish video list
 func PublishList(c *gin.Context) {
+	videoList := service.PublishList()
 	c.JSON(http.StatusOK, VideoListResponse{
 		Response: Response{
 			StatusCode: 0,
 		},
-		VideoList: DemoVideos,
+		VideoList: videoList,
 	})
+}
+
+func coverGenerater(videoDst, coverDst string) error {
+	//ffmpeg command example: ffmpeg -ss 00:00:30 -i 666051400.mp4 -vframes 1 0.jpg
+	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
+	err := cmd.Run()
+	if err != nil {
+		return errors.New("提取帧失败，使用默认封面")
+	}
+	return nil
 }
