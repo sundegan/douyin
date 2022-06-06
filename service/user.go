@@ -70,8 +70,8 @@ func Login(username, password string) (int64, error) {
 func UserInfo(id int64) (dao.User, error) {
 	user := dao.User{}
 	err := dao.DB.Where("id = ?", id).Find(&user).Error
-	user.FollowCount = dao.HLen(dao.RDB_FOLLOW, strconv.FormatInt(id, 10)) // 从DB1查询用户的关注用户总数
-	user.FollowerCount = dao.HLen(dao.RDB_FANS, strconv.FormatInt(id, 10)) // 从DB2查询用户的粉丝总数
+	user.FollowCount = dao.HLen(dao.RDB_FOLLOW, strconv.FormatInt(id, 10)) // 从Redis的DB1数据库查询用户的关注用户总数
+	user.FollowerCount = dao.HLen(dao.RDB_FANS, strconv.FormatInt(id, 10)) // 从Redis的DB2查询用户的粉丝总数
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, errors.New("用户不存在")
 	}
