@@ -79,10 +79,28 @@ func CommentAction(c *gin.Context) {
 
 }
 
-// CommentList all videos have same demo comment list
 func CommentList(c *gin.Context) {
+
+	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
+		log.Println("出现无法解析成64位整数的视频id")
+		return
+	}
+
+	commentList, err := service.CommentList(video_id)
+	if err != nil {
+		c.JSON(http.StatusOK, CommentListResponse{
+			Response: Response{
+				StatusCode: 1,
+				StatusMsg:  err.Error(),
+			},
+			CommentList: nil,
+		})
+	}
+
 	c.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
-		CommentList: DemoComments,
+		CommentList: commentList,
 	})
 }

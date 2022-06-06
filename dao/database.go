@@ -26,7 +26,7 @@ const (
 
 func InitDB() {
 	var err error
-	dsn := "root:1234@tcp(127.0.0.1:3306)/" +
+	dsn := "root:123456@tcp(127.0.0.1:3306)/" +
 		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
@@ -40,7 +40,7 @@ func InitDB() {
 
 	RDB = redis.NewClient(&redis.Options{
 		Addr:     "127.0.0.1:6379",
-		Password: "",
+		Password: "123456",
 		DB:       numTokenDB,
 	})
 	Ctx = context.Background()
@@ -48,7 +48,7 @@ func InitDB() {
 	LoginCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
 			Addr:     "127.0.0.1:6379",
-			Password: "",
+			Password: "123456",
 			DB:       numLoginCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(1000, time.Minute),

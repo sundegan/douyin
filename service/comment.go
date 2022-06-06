@@ -64,3 +64,37 @@ func DeleteComment(comment_id int64) error {
 	}
 	return nil
 }
+
+func CommentList(video_id int64) ([]dao.Comment, error) {
+
+	//判断video是否存在
+	video := dao.Video{}
+	err := dao.DB.Where("id = ?", video_id).Find(&video).Error
+	if err != nil {
+		return nil, err
+	}
+
+	//用video_id获取评论列表
+	var commentList []dao.Comment //comment表
+	err = dao.DB.Where("video_id = ?", video_id).Order("create_date DESC").Find(&commentList).Error
+
+	var returnList []dao.Comment
+	for _, c := range commentList {
+		var x = dao.Comment{}
+		x = c
+		user := dao.User{}
+		err := dao.DB.Where("id = ?", c.UserId).Find(&user).Error
+		if err != nil {
+			return nil, err
+		}
+		user.Pwd = ""
+		user.Salt = ""
+		x.User = user
+		returnList = append(returnList, x)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return returnList, nil
+}
