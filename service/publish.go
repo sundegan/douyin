@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const staticRouter = "http://172.25.151.124:3000/"
+const staticRouter = "http://10.0.2.2:8081/"
 
 func Publish(filename, title string, user_id int64, is_generate_ok bool) error {
 	fileSuffix := filepath.Ext(filename)
@@ -25,7 +25,6 @@ func Publish(filename, title string, user_id int64, is_generate_ok bool) error {
 	if err := dao.DB.Create(&v).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 
