@@ -30,8 +30,8 @@ func initRouter(r *gin.Engine) {
 
 	{
 		// extra apis - II
-		apiRouter.POST("/relation/action/", controller.RelationAction)
-		apiRouter.GET("/relation/follow/list/", controller.FollowList)
-		apiRouter.GET("/relation/follower/list/", controller.FollowerList)
+		apiRouter.POST("/relation/action/", controller.VerifyToken, controller.RelationAction)
+		apiRouter.GET("/relation/follow/list/", controller.VerifyToken, controller.FollowList)
+		apiRouter.GET("/relation/follower/list/", controller.VerifyToken, controller.FollowerList)
 	}
 }
