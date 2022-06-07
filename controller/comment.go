@@ -19,13 +19,16 @@ type CommentActionResponse struct {
 	Comment dao.Comment `json:"comment,omitempty"`
 }
 
+// CommentAction 新增/删除评论
 func CommentAction(c *gin.Context) {
+	//从上下文中获取执行当前操作的用户的id
 	id, ok := getId(c)
 	if !ok {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}
 
+	//获取执行操作的视频id
 	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
@@ -33,9 +36,10 @@ func CommentAction(c *gin.Context) {
 		return
 	}
 
+	//获取当前操作类型
 	actionType := c.Query("action_type")
 
-	if actionType == "1" {
+	if actionType == "1" { //增加评论
 		comment_text := c.Query("comment_text")
 		comment, err := service.Comment(video_id, id, comment_text)
 		if err != nil {
@@ -50,7 +54,7 @@ func CommentAction(c *gin.Context) {
 			})
 			return
 		}
-	} else if actionType == "2" {
+	} else if actionType == "2" { //删除评论
 		comment_id, err := strconv.ParseInt(c.Query("comment_id"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取评论id失败"})
