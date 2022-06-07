@@ -16,12 +16,16 @@ var (
 	RDB        *redis.Client
 	Ctx        context.Context
 	LoginCache *cache.Cache
+	RDB_FOLLOW *redis.Client // 存放关注列表
+	RDB_FANS   *redis.Client // 存放粉丝列表
 )
 
 // Redis数据库编号
 const (
 	numTokenDB = iota
 	numLoginCacheDB
+	numFollowListDB
+	numFollowerListDB
 )
 
 func InitDB() {
@@ -35,6 +39,8 @@ func InitDB() {
 		panic(err)
 	}
 
+	Ctx = context.Background()
+
 	err = DB.AutoMigrate(&User{}, &Video{}, &Favorite{}, &Comment{})
 	log.Println(err)
 
@@ -43,7 +49,6 @@ func InitDB() {
 		Password: "zxc05020519",
 		DB:       numTokenDB,
 	})
-	Ctx = context.Background()
 
 	LoginCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
@@ -52,5 +57,18 @@ func InitDB() {
 			DB:       numLoginCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+	})
+
+	// 关注列表数据库
+	RDB_FOLLOW = redis.NewClient(&redis.Options{
+		Addr:     "192.168.200.128:7000",
+		Password: "zxc05020519",
+		DB:       numFollowListDB,
+	})
+	// 粉丝列表数据库
+	RDB_FANS = redis.NewClient(&redis.Options{
+		Addr:     "192.168.200.128:7000",
+		Password: "zxc05020519",
+		DB:       numFollowerListDB,
 	})
 }

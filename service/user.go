@@ -123,6 +123,13 @@ func UserInfo(id int64) (dao.User, error) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, errors.New("用户不存在")
 	}
+
+	userId := strconv.FormatInt(user.Id, 10)
+	user.FollowCount = dao.HLen(dao.RDB_FOLLOW, userId) // 用户的关注总数
+	user.FollowerCount = dao.HLen(dao.RDB_FANS, userId) // 用户的粉丝总数
+
+	user.EraseSensitiveFiled()
+
 	return user, nil
 }
 

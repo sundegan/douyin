@@ -18,7 +18,7 @@ type Video struct {
 	Title         string    `json:"title,omitempty" gorm:"type:varchar(100)"`
 	PlayUrl       string    `json:"play_url,omitempty" gorm:"type:varchar(100)"`
 	CoverUrl      string    `json:"cover_url,omitempty" gorm:"type:varchar(100)"`
-	CreatedAt     time.Time `json:"-" gorm:"index"`
+	CreatedAt     time.Time `json:"-" gorm:"index:,sort:desc"`
 
 	Author User `json:"author"`
 }

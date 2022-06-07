@@ -20,6 +20,7 @@ func Feed(c *gin.Context) {
 	token := c.Query("token")
 
 	var id int64
+	// 用户携带了token
 	if token != "" {
 		_id, err := dao.RDB.Get(dao.Ctx, token).Result()
 		if err == nil {
