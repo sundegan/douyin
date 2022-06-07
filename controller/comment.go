@@ -29,7 +29,7 @@ func CommentAction(c *gin.Context) {
 	}
 
 	//获取执行操作的视频id
-	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
 		log.Println("出现无法解析成64位整数的视频id")
@@ -40,8 +40,8 @@ func CommentAction(c *gin.Context) {
 	actionType := c.Query("action_type")
 
 	if actionType == "1" { //增加评论
-		comment_text := c.Query("comment_text")
-		comment, err := service.Comment(video_id, id, comment_text)
+		commentText := c.Query("comment_text")
+		comment, err := service.Comment(videoId, id, commentText)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "评论异常"},
@@ -55,13 +55,13 @@ func CommentAction(c *gin.Context) {
 			return
 		}
 	} else if actionType == "2" { //删除评论
-		comment_id, err := strconv.ParseInt(c.Query("comment_id"), 10, 64)
+		commentId, err := strconv.ParseInt(c.Query("comment_id"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取评论id失败"})
 			log.Println("出现无法解析成64位整数的视频id")
 			return
 		}
-		err = service.DeleteComment(comment_id)
+		err = service.DeleteComment(commentId)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{
 				Response: Response{StatusCode: 1, StatusMsg: "删除评论异常"},
@@ -80,7 +80,7 @@ func CommentAction(c *gin.Context) {
 func CommentList(c *gin.Context) {
 
 	//确认视频id无误
-	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
 		log.Println("出现无法解析成64位整数的视频id")
@@ -88,7 +88,7 @@ func CommentList(c *gin.Context) {
 	}
 
 	//获取commentList
-	commentList, err := service.CommentList(video_id)
+	commentList, err := service.CommentList(videoId)
 	if err != nil {
 		c.JSON(http.StatusOK, CommentListResponse{
 			Response: Response{

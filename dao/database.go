@@ -16,8 +16,8 @@ var (
 	RDB        *redis.Client
 	Ctx        context.Context
 	LoginCache *cache.Cache
-	RDB_FOLLOW *redis.Client // 存放关注列表
-	RDB_FANS   *redis.Client // 存放粉丝列表
+	RdbFollow  *redis.Client // 存放关注列表
+	RdbFans    *redis.Client // 存放粉丝列表
 )
 
 // Redis数据库编号
@@ -60,13 +60,13 @@ func InitDB() {
 	})
 
 	// 关注列表数据库
-	RDB_FOLLOW = redis.NewClient(&redis.Options{
+	RdbFollow = redis.NewClient(&redis.Options{
 		Addr:     "192.168.200.128:7000",
 		Password: "zxc05020519",
 		DB:       numFollowListDB,
 	})
 	// 粉丝列表数据库
-	RDB_FANS = redis.NewClient(&redis.Options{
+	RdbFans = redis.NewClient(&redis.Options{
 		Addr:     "192.168.200.128:7000",
 		Password: "zxc05020519",
 		DB:       numFollowerListDB,

@@ -36,7 +36,7 @@ func Feed(id int64, latestTime int64) (videoList []dao.Video, nextTime int64) {
 			}
 
 			// 关注
-			if dao.HExists(dao.RDB_FOLLOW, strconv.FormatInt(id, 10), strconv.FormatInt(videoList[i].AuthorId, 10)) {
+			if dao.HExists(dao.RdbFollow, strconv.FormatInt(id, 10), strconv.FormatInt(videoList[i].AuthorId, 10)) {
 				videoList[i].Author.IsFollow = true
 			}
 		}

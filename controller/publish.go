@@ -38,7 +38,7 @@ func Publish(c *gin.Context) {
 	filename := filepath.Base(data.Filename)
 	fileSuffix := filepath.Ext(data.Filename)
 	finalName := fmt.Sprintf("%d_%s", id, filename)
-	saveFile := filepath.Join("./public/videos/", finalName)
+	saveFile := filepath.Join("./static-server/videos/", finalName)
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -47,9 +47,9 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	saveCover := filepath.Join("./public/covers", strings.TrimSuffix(finalName, fileSuffix)+".jpg")
+	saveCover := filepath.Join("./static-server/covers/", strings.TrimSuffix(finalName, fileSuffix)+".jpg")
 
-	err = coverGenerater(saveFile, saveCover)
+	err = coverGenerator(saveFile, saveCover)
 	isGenerateOK := true
 	if err != nil {
 		fmt.Print(err)
@@ -69,7 +69,6 @@ func Publish(c *gin.Context) {
 
 }
 
-
 func PublishList(c *gin.Context) {
 	id, ok := getId(c)
 	if !ok {
@@ -85,7 +84,7 @@ func PublishList(c *gin.Context) {
 	})
 }
 
-func coverGenerater(videoDst, coverDst string) error {
+func coverGenerator(videoDst, coverDst string) error {
 	//ffmpeg command example: ffmpeg -ss 00:00:30 -i 666051400.mp4 -vframes 1 0.jpg
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
 	err := cmd.Run()

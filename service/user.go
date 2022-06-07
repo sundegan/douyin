@@ -125,8 +125,8 @@ func UserInfo(id int64) (dao.User, error) {
 	}
 
 	userId := strconv.FormatInt(user.Id, 10)
-	user.FollowCount = dao.HLen(dao.RDB_FOLLOW, userId) // 用户的关注总数
-	user.FollowerCount = dao.HLen(dao.RDB_FANS, userId) // 用户的粉丝总数
+	user.FollowCount = dao.HLen(dao.RdbFollow, userId) // 用户的关注总数
+	user.FollowerCount = dao.HLen(dao.RdbFans, userId) // 用户的粉丝总数
 
 	user.EraseSensitiveFiled()
 

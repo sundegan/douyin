@@ -19,16 +19,16 @@ func FavoriteAction(c *gin.Context) {
 	}
 
 	//获取执行操作的视频id
-	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
 		log.Println("出现无法解析成64位整数的视频id")
 		return
 	}
 	//获取当前操作类型
-	action_type := c.Query("action_type")
+	actionType := c.Query("action_type")
 
-	err = service.Favorite(video_id, id, action_type)
+	err = service.Favorite(videoId, id, actionType)
 	if err == errors.New("已点赞过该视频") {
 		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "已点赞过该视频"})
 	} else if err != nil {

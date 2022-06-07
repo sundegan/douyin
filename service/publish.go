@@ -8,17 +8,17 @@ import (
 
 const staticRouter = "http://10.0.2.2:8081/"
 
-func Publish(filename, title string, user_id int64, is_generate_ok bool) error {
+func Publish(filename, title string, userId int64, isGenerateOk bool) error {
 	fileSuffix := filepath.Ext(filename)
 
 	v := dao.Video{
-		AuthorId: user_id,
+		AuthorId: userId,
 		Title:    title,
 		PlayUrl:  staticRouter + "videos/" + filename,
 		CoverUrl: staticRouter + "covers/" + strings.TrimSuffix(filename, fileSuffix) + ".jpg",
 	}
 
-	if !is_generate_ok {
+	if !isGenerateOk {
 		v.CoverUrl = "https://cdn.pixabay.com/photo/2016/03/27/18/10/bear-1283347_1280.jpg"
 	}
 

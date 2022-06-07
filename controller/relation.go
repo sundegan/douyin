@@ -3,7 +3,6 @@ package controller
 import (
 	"douyin-server/service"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -29,7 +28,6 @@ func RelationAction(c *gin.Context) {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取对方用户id失败"})
 		return
 	}
-	fmt.Println(toUserId)
 
 	// 获取操作类型,1表示关注,2表示取消关注
 	actionType := c.Query("action_type")

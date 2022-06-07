@@ -8,12 +8,12 @@ import (
 )
 
 // Comment 新增评论
-func Comment(video_id int64, user_id int64, comment_text string) (dao.Comment, error) {
+func Comment(videoId int64, userId int64, commentText string) (dao.Comment, error) {
 	comment := dao.Comment{}
 
 	//判断进行评论的用户是否存在
 	user := dao.User{}
-	err := dao.DB.Where("id = ?", user_id).Find(&user).Error
+	err := dao.DB.Where("id = ?", userId).Find(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return comment, errors.New("执行评论操作的用户不存在")
 	}
@@ -24,7 +24,7 @@ func Comment(video_id int64, user_id int64, comment_text string) (dao.Comment, e
 
 	//判断video是否存在
 	video := dao.Video{}
-	err = dao.DB.Where("id = ?", video_id).Find(&video).Error
+	err = dao.DB.Where("id = ?", videoId).Find(&video).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return comment, errors.New("评论的视频不存在")
 	}
@@ -36,8 +36,8 @@ func Comment(video_id int64, user_id int64, comment_text string) (dao.Comment, e
 
 	//更新新建的comment对象的信息并保存在数据库中
 	comment.UserId = user.Id
-	comment.VideoId = video_id
-	comment.Content = comment_text
+	comment.VideoId = videoId
+	comment.Content = commentText
 	comment.CreateDate = time.Now().Format("01-02")
 	comment.User = user
 	if err := dao.DB.Create(&comment).Error; err != nil {
@@ -47,11 +47,11 @@ func Comment(video_id int64, user_id int64, comment_text string) (dao.Comment, e
 }
 
 // DeleteComment 删除评论
-func DeleteComment(comment_id int64) error {
+func DeleteComment(commentId int64) error {
 	comment := dao.Comment{}
 
 	//判断删除的评论是否存在
-	err := dao.DB.Where("id = ?", comment_id).Find(&comment).Error
+	err := dao.DB.Where("id = ?", commentId).Find(&comment).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("删除的评论不存在")
 	}
@@ -79,18 +79,18 @@ func DeleteComment(comment_id int64) error {
 }
 
 // CommentList 获取评论列表
-func CommentList(video_id int64) ([]dao.Comment, error) {
+func CommentList(videoId int64) ([]dao.Comment, error) {
 
 	//判断video是否存在
 	video := dao.Video{}
-	err := dao.DB.Where("id = ?", video_id).Find(&video).Error
+	err := dao.DB.Where("id = ?", videoId).Find(&video).Error
 	if err != nil {
 		return nil, err
 	}
 
 	//用video_id获取评论列表，按发布日期进行降序排序
 	var commentList []dao.Comment //comment表
-	err = dao.DB.Where("video_id = ?", video_id).Order("create_date DESC").Find(&commentList).Error
+	err = dao.DB.Where("video_id = ?", videoId).Order("create_date DESC").Find(&commentList).Error
 
 	//returnList存储需要返回的信息
 	var returnList []dao.Comment
