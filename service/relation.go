@@ -87,7 +87,7 @@ func FollowList(userId int64) ([]ActionUser, error) {
 		actionUser.Name = dao.HGet(dao.RdbFollow, strconv.FormatInt(userId, 10), id) // 用户的名称
 		actionUser.FollowCount = dao.HLen(dao.RdbFollow, id)                         // 用户的关注总数
 		actionUser.FollowerCount = dao.HLen(dao.RdbFans, id)                         // 用户的粉丝总数
-		actionUser.IsFollow = true
+		actionUser.IsFollow = true                                                   // 在关注列表中的用户都为关注状态
 		userList = append(userList, actionUser)
 	}
 	return userList, nil
