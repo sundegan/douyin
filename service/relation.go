@@ -105,8 +105,10 @@ func FollowerList(userId int64) ([]ActionUser, error) {
 		actionUser.Name = dao.HGet(dao.RdbFans, strconv.FormatInt(userId, 10), id) // 用户的名称
 		actionUser.FollowCount = dao.HLen(dao.RdbFollow, id)                       // 用户的关注总数
 		actionUser.FollowerCount = dao.HLen(dao.RdbFans, id)                       // 用户的粉丝总数
-		isExist := dao.HExists(dao.RdbFollow, strconv.FormatInt(userId, 10), id)   // 判断是否互粉
-		if isExist {                                                               // 互粉,则is_follow字段设为true
+
+		// 判断是否互粉
+		isExist := dao.HExists(dao.RdbFollow, strconv.FormatInt(userId, 10), id)
+		if isExist { // 互粉,则is_follow字段设为true
 			actionUser.IsFollow = true
 		} else {
 			actionUser.IsFollow = false
