@@ -72,8 +72,10 @@ func CommentAction(c *gin.Context) {
 
 }
 
+// CommentList 获取评论列表
 func CommentList(c *gin.Context) {
 
+	//确认视频id无误
 	video_id, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取视频id失败"})
@@ -81,6 +83,7 @@ func CommentList(c *gin.Context) {
 		return
 	}
 
+	//获取commentList
 	commentList, err := service.CommentList(video_id)
 	if err != nil {
 		c.JSON(http.StatusOK, CommentListResponse{
@@ -92,6 +95,7 @@ func CommentList(c *gin.Context) {
 		})
 	}
 
+	//返回commentList
 	c.JSON(http.StatusOK, CommentListResponse{
 		Response:    Response{StatusCode: 0},
 		CommentList: commentList,

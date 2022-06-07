@@ -65,6 +65,7 @@ func DeleteComment(comment_id int64) error {
 	return nil
 }
 
+// CommentList 获取评论列表
 func CommentList(video_id int64) ([]dao.Comment, error) {
 
 	//判断video是否存在
@@ -74,14 +75,17 @@ func CommentList(video_id int64) ([]dao.Comment, error) {
 		return nil, err
 	}
 
-	//用video_id获取评论列表
+	//用video_id获取评论列表，按发布日期进行降序排序
 	var commentList []dao.Comment //comment表
 	err = dao.DB.Where("video_id = ?", video_id).Order("create_date DESC").Find(&commentList).Error
 
+	//returnList存储需要返回的信息
 	var returnList []dao.Comment
+	//为每个comment添加user信息
 	for _, c := range commentList {
 		var x = dao.Comment{}
 		x = c
+		//获取该评论对应的用户信息
 		user := dao.User{}
 		err := dao.DB.Where("id = ?", c.UserId).Find(&user).Error
 		if err != nil {
@@ -96,5 +100,6 @@ func CommentList(video_id int64) ([]dao.Comment, error) {
 		return nil, err
 	}
 
+	//返回returnList
 	return returnList, nil
 }
