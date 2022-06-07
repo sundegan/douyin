@@ -4,8 +4,10 @@ import (
 	"douyin-server/dao"
 	"douyin-server/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type FeedResponse struct {
@@ -15,9 +17,31 @@ type FeedResponse struct {
 }
 
 func Feed(c *gin.Context) {
-	_id, _ := c.Get("id")
+	token := c.Query("token")
 
-	id, _ := _id.(int64)
+	var id int64
+	if token != "" {
+		_id, err := dao.RDB.Get(dao.Ctx, token).Result()
+		if err == nil {
+			// token续期
+			dao.RDB.Expire(dao.Ctx, token, 12*time.Hour)
+		} else {
+			// token不存在，记录该ip此次访问
+			ipAddress := c.ClientIP()
+			times, _ := dao.RDB.Get(dao.Ctx, ipAddress).Int64()
+			if times > 10 {
+				c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "疑似恶意访问，请勿携带非法token！"})
+				c.Abort()
+				return
+			}
+			dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)
+		}
+
+		id, err = strconv.ParseInt(_id, 10, 64)
+		if err != nil {
+			log.Println("出现无法解析成64位整数的token")
+		}
+	}
 
 	_latestTime := c.Query("latest_time")
 	latestTime, err := strconv.ParseInt(_latestTime, 10, 64)
