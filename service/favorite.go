@@ -102,12 +102,15 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 	return nil
 }
 
-func FavoriteList(user_id int64) ([]dao.Video, error) {
+// Favorite 获取点赞列表
+func FavoriteList(userId int64) ([]dao.Video, error) {
+	//依据用户id查询当前用户点赞的所有视频的视频id，存入favorite数组
 	favorite := []dao.Favorite{}
-	err := dao.DB.Where("user_id = ?", user_id).Find(&favorite).Error
+	err := dao.DB.Where("user_id = ?", userId).Find(&favorite).Error
 	if err != nil {
 		return nil, err
 	}
+	//依据favorite数组中的数据查询视频列表
 	videoList := []dao.Video{}
 	for _, f := range favorite {
 		video := dao.Video{}
