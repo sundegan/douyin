@@ -20,6 +20,22 @@ type UserResponse struct {
 	User dao.User `json:"user"`
 }
 
+// 通过gin上下文获取用户id
+func getId(c *gin.Context) (id int64, ok bool) {
+	_id, ok := c.Get("id")
+	if !ok {
+		return
+	}
+
+	id, ok = _id.(int64)
+	if !ok {
+		log.Println("出现无法解析成64位整数的token")
+		return
+	}
+
+	return
+}
+
 // LoginLimit 中间件，限制注册登录操作过于频繁。
 func LoginLimit(c *gin.Context) {
 	ipAddress := c.ClientIP()

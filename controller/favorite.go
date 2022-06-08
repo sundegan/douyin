@@ -40,10 +40,9 @@ func FavoriteAction(c *gin.Context) {
 
 // FavoriteList 点赞视频列表
 func FavoriteList(c *gin.Context) {
-
-	//从上下文中获取执行当前操作的用户的id
-	id, ok := getId(c)
-	if !ok {
+	_id := c.Query("user_id")
+	id, err := strconv.ParseInt(_id, 10, 64)
+	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}

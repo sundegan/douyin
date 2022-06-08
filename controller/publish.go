@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +56,7 @@ func Publish(c *gin.Context) {
 		fmt.Print(err)
 		isGenerateOK = false
 	}
-	if err := service.Publish(finalName, c.PostForm("title"), id, isGenerateOK); err != nil {
+	if err = service.Publish(finalName, c.PostForm("title"), id, isGenerateOK); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
@@ -70,8 +71,9 @@ func Publish(c *gin.Context) {
 }
 
 func PublishList(c *gin.Context) {
-	id, ok := getId(c)
-	if !ok {
+	_id := c.Query("user_id")
+	id, err := strconv.ParseInt(_id, 10, 64)
+	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}

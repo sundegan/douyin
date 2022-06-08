@@ -26,11 +26,12 @@ func Feed(id int64, latestTime int64) (videoList []dao.Video, nextTime int64) {
 	// 说明当前获取视频的客户端已登陆账号，检查当前视频是否点赞过或已关注作者
 	if id != 0 {
 		for i := range videoList {
-			// 点赞
-			rows, err := dao.DB.Model(&dao.Favorite{}).Where("user_id = ? AND video_id = ?", id, videoList[i].Id).Rows()
-			if err != nil {
-				continue
-			}
+			// 此处错误可忽略
+			user, _ := UserInfo(videoList[i].AuthorId)
+			videoList[i].Author = user
+
+			// 点赞，该错误可忽略
+			rows, _ := dao.DB.Model(&dao.Favorite{}).Where("user_id = ? AND video_id = ?", id, videoList[i].Id).Rows()
 			if rows.Next() {
 				videoList[i].IsFavorite = true
 			}

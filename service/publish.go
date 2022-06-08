@@ -29,6 +29,6 @@ func Publish(filename, title string, userId int64, isGenerateOk bool) error {
 }
 
 func PublishList(id int64) (videoList []dao.Video) {
-	dao.DB.Model(&dao.Video{}).Where("author_id = ?", id).Order("created_at desc").Find(&videoList)
+	dao.DB.Model(&dao.Video{}).Where("author_id = ?", id).Order("created_at DESC").Find(&videoList)
 	return
 }

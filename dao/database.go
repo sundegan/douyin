@@ -32,7 +32,7 @@ const (
 
 func InitDB() {
 	var err error
-	dsn := "root:zxc05020519@tcp(192.168.200.128:23306)/" +
+	dsn := "root:(localhost:3306)/" +
 		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
@@ -47,39 +47,29 @@ func InitDB() {
 	log.Println(err)
 
 	RDB = redis.NewClient(&redis.Options{
-		Addr:     "192.168.200.128:7000",
-		Password: "zxc05020519",
-		DB:       numTokenDB,
+		DB: numTokenDB,
 	})
 
 	LoginCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
-			Addr:     "192.168.200.128:7000",
-			Password: "zxc05020519",
-			DB:       numLoginCacheDB,
+			DB: numLoginCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(10000, time.Minute),
 	})
 
 	UserCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
-			Addr:     "192.168.200.128:7000",
-			Password: "zxc05020519",
-			DB:       numUserCacheDB,
+			DB: numUserCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(10000, time.Minute),
 	})
 
 	// 关注列表数据库
 	RdbFollow = redis.NewClient(&redis.Options{
-		Addr:     "192.168.200.128:7000",
-		Password: "zxc05020519",
-		DB:       numFollowListDB,
+		DB: numFollowListDB,
 	})
 	// 粉丝列表数据库
 	RdbFans = redis.NewClient(&redis.Options{
-		Addr:     "192.168.200.128:7000",
-		Password: "zxc05020519",
-		DB:       numFollowerListDB,
+		DB: numFollowerListDB,
 	})
 }

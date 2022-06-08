@@ -19,7 +19,7 @@ func main() {
 
 	initRouter(r)
 
-	r.Run(":8080") // http默认端口
+	r.Run(":80") // http默认端口
 
 	err := dao.RDB.Close()
 	log.Fatal(err.Error())
