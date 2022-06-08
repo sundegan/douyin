@@ -94,15 +94,11 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 	if err != nil {
 		return errors.New("作者被点赞数修改失败")
 	}
-	err = dao.DB.Save(&author).Error
-	if err != nil {
-		return errors.New("作者被点赞数修改失败")
-	}
 
 	return nil
 }
 
-// Favorite 获取点赞列表
+// FavoriteList 获取点赞列表
 func FavoriteList(userId int64) ([]dao.Video, error) {
 	//依据用户id查询当前用户点赞的所有视频的视频id，存入favorite数组
 	favorite := []dao.Favorite{}

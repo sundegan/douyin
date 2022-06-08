@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const staticRouter = "http://10.0.2.2:8081/"
+const staticRouter = "http://122.9.113.111:8080/"
 
 func Publish(filename, title string, userId int64, isGenerateOk bool) error {
 	fileSuffix := filepath.Ext(filename)

@@ -16,6 +16,7 @@ var (
 	RDB        *redis.Client
 	Ctx        context.Context
 	LoginCache *cache.Cache
+	UserCache  *cache.Cache
 	RdbFollow  *redis.Client // 存放关注列表
 	RdbFans    *redis.Client // 存放粉丝列表
 )
@@ -24,6 +25,7 @@ var (
 const (
 	numTokenDB = iota
 	numLoginCacheDB
+	numUserCacheDB
 	numFollowListDB
 	numFollowerListDB
 )
@@ -56,7 +58,16 @@ func InitDB() {
 			Password: "zxc05020519",
 			DB:       numLoginCacheDB,
 		}),
-		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+		LocalCache: cache.NewTinyLFU(10000, time.Minute),
+	})
+
+	UserCache = cache.New(&cache.Options{
+		Redis: redis.NewClient(&redis.Options{
+			Addr:     "192.168.200.128:7000",
+			Password: "zxc05020519",
+			DB:       numUserCacheDB,
+		}),
+		LocalCache: cache.NewTinyLFU(10000, time.Minute),
 	})
 
 	// 关注列表数据库

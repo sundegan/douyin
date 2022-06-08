@@ -28,3 +28,6 @@ go.work
 
 # covers
 *.jpg
+
+douyin-server
+static-server

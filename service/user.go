@@ -53,7 +53,7 @@ func LoginLimit(ipAddress string) bool {
 	return true
 }
 
-func Register(username, password string) (int64, error) {
+func Register(username, password string) (id int64, err error) {
 	if len(username) > 32 {
 		return 0, errors.New("用户名过长，不可超过32位")
 	}
@@ -83,6 +83,7 @@ func Register(username, password string) (int64, error) {
 
 	dao.DB.Create(&user)
 
+	// 布隆过滤器中加入新用户的用户名
 	userFilter.AddString(username)
 
 	return user.Id, nil
@@ -119,9 +120,17 @@ func Login(username, password string) (int64, error) {
 
 func UserInfo(id int64) (dao.User, error) {
 	user := dao.User{}
-	err := dao.DB.Where("id = ?", id).Find(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return user, errors.New("用户不存在")
+
+	// 先尝试查缓存，不命中再查数据库
+	var buf []byte
+	err := dao.UserCache.Get(context.Background(), strconv.FormatInt(id, 10), &buf)
+	if err == nil {
+		err = json.Unmarshal(buf, &user)
+	} else {
+		err = dao.DB.Where("id = ?", id).Find(&user).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return user, errors.New("用户不存在")
+		}
 	}
 
 	userId := strconv.FormatInt(user.Id, 10)
