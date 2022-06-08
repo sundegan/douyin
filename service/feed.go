@@ -18,17 +18,14 @@ func Feed(id int64, latestTime int64) (videoList []dao.Video, nextTime int64) {
 	// 返回这次视频最近的投稿时间-1，下次即可获取比这次视频旧的视频
 	nextTime = videoList[len(videoList)-1].CreatedAt.UnixMilli() - 1
 
-	// 去除视频中Author字段敏感信息
 	for i := range videoList {
+		// 去除视频中Author字段敏感信息
 		videoList[i].Author.EraseSensitiveFiled()
-	}
-
-	// 说明当前获取视频的客户端已登陆账号，检查当前视频是否点赞过或已关注作者
-	if id != 0 {
-		for i := range videoList {
+		// 说明当前用户已登录
+		if id != 0 {
 			// 此处错误可忽略
-			user, _ := UserInfo(videoList[i].AuthorId)
-			videoList[i].Author = user
+			author, _ := UserInfo(videoList[i].AuthorId)
+			videoList[i].Author = author
 
 			// 点赞，该错误可忽略
 			rows, _ := dao.DB.Model(&dao.Favorite{}).Where("user_id = ? AND video_id = ?", id, videoList[i].Id).Rows()

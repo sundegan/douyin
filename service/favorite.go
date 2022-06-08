@@ -57,7 +57,7 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 			UserId:  userId,
 			VideoId: videoId,
 		}
-		if err := dao.DB.Create(&favorite).Error; err != nil {
+		if err = dao.DB.Create(&favorite).Error; err != nil {
 			return err
 		}
 	} else if actionType == "2" { //取消点赞
@@ -75,7 +75,7 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 
 		//从点赞关联表中删除关联
 		favorite := dao.Favorite{}
-		if err := dao.DB.Where("user_id = ? AND video_id = ?", userId, videoId).
+		if err = dao.DB.Where("user_id = ? AND video_id = ?", userId, videoId).
 			Delete(&favorite).Error; err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ func FavoriteList(userId int64) ([]dao.Video, error) {
 	videoList := []dao.Video{}
 	for _, f := range favorite {
 		video := dao.Video{}
-		err := dao.DB.Where("id = ?", f.VideoId).Find(&video).Error
+		err = dao.DB.Where("id = ?", f.VideoId).Find(&video).Error
 		if err != nil {
 			return nil, err
 		}

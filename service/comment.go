@@ -30,7 +30,7 @@ func Comment(videoId int64, userId int64, commentText string) (dao.Comment, erro
 	}
 	//增加视频评论数并更新
 	video.CommentCount++
-	if err := dao.DB.Save(&video).Error; err != nil {
+	if err = dao.DB.Save(&video).Error; err != nil {
 		return comment, err
 	}
 
@@ -40,7 +40,7 @@ func Comment(videoId int64, userId int64, commentText string) (dao.Comment, erro
 	comment.Content = commentText
 	comment.CreateDate = time.Now().Format("01-02")
 	comment.User = user
-	if err := dao.DB.Create(&comment).Error; err != nil {
+	if err = dao.DB.Create(&comment).Error; err != nil {
 		return comment, err
 	}
 	return comment, nil
@@ -100,7 +100,7 @@ func CommentList(videoId int64) ([]dao.Comment, error) {
 		x = c
 		//获取该评论对应的用户信息
 		user := dao.User{}
-		err := dao.DB.Where("id = ?", c.UserId).Find(&user).Error
+		err = dao.DB.Where("id = ?", c.UserId).Find(&user).Error
 		if err != nil {
 			return nil, err
 		}

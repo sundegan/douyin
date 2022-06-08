@@ -32,7 +32,7 @@ const (
 
 func InitDB() {
 	var err error
-	dsn := "root:(localhost:3306)/" +
+	dsn := "root:@tcp(localhost:3306)/" +
 		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
