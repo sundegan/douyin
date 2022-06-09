@@ -44,11 +44,11 @@ func InitUser() {
 // LoginLimit 中间件服务，限制注册登录操作过于频繁。
 func LoginLimit(ipAddress string) bool {
 	// 错误可忽略
-	times, _ := dao.RDB.Get(dao.Ctx, ipAddress).Int64()
+	times, _ := dao.RdbToken.Get(context.Background(), ipAddress).Int64()
 	if times > 10 {
 		return false
 	} else {
-		dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)
+		dao.RdbToken.Set(context.Background(), ipAddress, times+1, time.Minute)
 	}
 	return true
 }
@@ -134,8 +134,8 @@ func UserInfo(id int64) (dao.User, error) {
 	}
 
 	userId := strconv.FormatInt(user.Id, 10)
-	user.FollowCount = dao.HLen(dao.RdbFollow, userId) // 用户的关注总数
-	user.FollowerCount = dao.HLen(dao.RdbFans, userId) // 用户的粉丝总数
+	user.FollowCount = dao.RdbFollow.HLen(context.Background(), userId).Val() // 用户的关注总数
+	user.FollowerCount = dao.RdbFans.HLen(context.Background(), userId).Val() // 用户的粉丝总数
 
 	user.EraseSensitiveFiled()
 
@@ -148,13 +148,13 @@ func CreateToken(id int64) (token int64) {
 	token = int64(rand.Uint64())
 
 	// 检测token有无冲突
-	_, err := dao.RDB.Get(dao.Ctx, strconv.FormatInt(token, 10)).Result()
+	_, err := dao.RdbToken.Get(context.Background(), strconv.FormatInt(token, 10)).Result()
 	for err == nil {
 		token = int64(rand.Uint64())
-		_, err = dao.RDB.Get(dao.Ctx, strconv.FormatInt(token, 10)).Result()
+		_, err = dao.RdbToken.Get(context.Background(), strconv.FormatInt(token, 10)).Result()
 	}
 
-	dao.RDB.Set(dao.Ctx, strconv.FormatInt(token, 10), id, 12*time.Hour)
+	dao.RdbToken.Set(context.Background(), strconv.FormatInt(token, 10), id, 12*time.Hour)
 
 	return
 }

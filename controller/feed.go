@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"douyin-server/dao"
 	"douyin-server/service"
 	"github.com/gin-gonic/gin"
@@ -22,20 +23,20 @@ func Feed(c *gin.Context) {
 	var id int64
 	// 用户携带了token
 	if token != "" {
-		_id, err := dao.RDB.Get(dao.Ctx, token).Result()
+		_id, err := dao.RdbToken.Get(context.Background(), token).Result()
 		if err == nil {
 			// token续期
-			dao.RDB.Expire(dao.Ctx, token, 12*time.Hour)
+			dao.RdbToken.Expire(context.Background(), token, 12*time.Hour)
 		} else {
 			// token不存在，记录该ip此次访问
 			ipAddress := c.ClientIP()
-			times, _ := dao.RDB.Get(dao.Ctx, ipAddress).Int64()
+			times, _ := dao.RdbToken.Get(context.Background(), ipAddress).Int64()
 			if times > 10 {
 				c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "疑似恶意访问，请勿携带非法token！"})
 				c.Abort()
 				return
 			}
-			dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)
+			dao.RdbToken.Set(context.Background(), ipAddress, times+1, time.Minute)
 		}
 
 		id, err = strconv.ParseInt(_id, 10, 64)

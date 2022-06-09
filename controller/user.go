@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"douyin-server/dao"
 	"douyin-server/service"
 	"github.com/gin-gonic/gin"
@@ -63,20 +64,20 @@ func VerifyToken(c *gin.Context) {
 
 	ipAddress := c.ClientIP()
 	// 错误可忽略
-	times, _ := dao.RDB.Get(dao.Ctx, ipAddress).Int64()
+	times, _ := dao.RdbToken.Get(context.Background(), ipAddress).Int64()
 	if times > 10 {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "操作过于频繁，请稍后再试"})
 		c.Abort()
 		return
 	}
 
-	_id, err := dao.RDB.Get(dao.Ctx, t.Token).Result()
+	_id, err := dao.RdbToken.Get(context.Background(), t.Token).Result()
 	if err == nil {
 		// token续期
-		dao.RDB.Expire(dao.Ctx, t.Token, 12*time.Hour)
+		dao.RdbToken.Expire(context.Background(), t.Token, 12*time.Hour)
 	} else {
 		// token不存在，记录该ip此次访问
-		dao.RDB.Set(dao.Ctx, ipAddress, times+1, time.Minute)
+		dao.RdbToken.Set(context.Background(), ipAddress, times+1, time.Minute)
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "登陆已过期，请重新登陆"})
 		c.Abort()
 		return

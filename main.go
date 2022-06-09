@@ -21,6 +21,6 @@ func main() {
 
 	r.Run(":80") // http默认端口
 
-	err := dao.RDB.Close()
+	err := dao.RdbToken.Close()
 	log.Fatal(err.Error())
 }
