@@ -87,7 +87,6 @@ func PublishList(c *gin.Context) {
 }
 
 func coverGenerator(videoDst, coverDst string) error {
-	//ffmpeg command example: ffmpeg -ss 00:00:30 -i 666051400.mp4 -vframes 1 0.jpg
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
 	err := cmd.Run()
 	if err != nil {
