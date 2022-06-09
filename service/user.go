@@ -89,7 +89,7 @@ func Register(username, password string) (id int64, err error) {
 	return user.Id, nil
 }
 
-func Login(username, password string) (int64, error) {
+func Login(username, password string) (id int64, err error) {
 	// 先查布隆过滤器，不存在直接返回错误，降低数据库的压力
 	if !userFilter.TestString(username) {
 		return 0, errors.New("用户名或密码错误")
@@ -98,35 +98,45 @@ func Login(username, password string) (int64, error) {
 	user := dao.User{}
 
 	// 再查缓存
+	cacheMissed := false
 	var buf []byte
-	err := dao.LoginCache.Get(context.Background(), username, &buf)
+	err = dao.LoginCache.Get(context.Background(), username, &buf)
 	if err == nil {
 		err = json.Unmarshal(buf, &user)
-		if err == nil {
-			if err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
-				return 0, errors.New("用户名或密码错误")
-			}
-			return user.Id, nil
+		if err != nil {
+			cacheMissed = true
 		}
+	} else {
+		cacheMissed = true
 	}
 
 	//缓存未命中，查数据库
-	dao.DB.Where("name = ?", username).Find(&user)
+	if cacheMissed {
+		// 上下文中注明本次要写入登录缓存
+		dao.DB.Model(&dao.User{}).Set("login", struct{}{}).Where("name = ?", username).Find(&user)
+	}
+
+	// 检验密码
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(username+password+user.Salt)); err != nil {
 		return 0, errors.New("用户名或密码错误")
 	}
 	return user.Id, nil
 }
 
-func UserInfo(id int64) (dao.User, error) {
-	user := dao.User{}
-
+func UserInfo(id int64) (user dao.User, err error) {
 	// 先尝试查缓存，不命中再查数据库
+	cacheMissed := false
 	var buf []byte
-	err := dao.UserCache.Get(context.Background(), strconv.FormatInt(id, 10), &buf)
+	err = dao.UserCache.Get(context.Background(), strconv.FormatInt(id, 10), &buf)
 	if err == nil {
 		err = json.Unmarshal(buf, &user)
+		if err != nil {
+			cacheMissed = true
+		}
 	} else {
+		cacheMissed = true
+	}
+	if cacheMissed {
 		err = dao.DB.Where("id = ?", id).Find(&user).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return user, errors.New("用户不存在")

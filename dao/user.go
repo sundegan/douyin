@@ -23,24 +23,31 @@ type User struct {
 
 // AfterFind 查询完后进行写缓存
 func (u *User) AfterFind(tx *gorm.DB) (err error) {
-	jsonU, err := json.Marshal(*u)
-	if err != nil {
-		log.Println("json编码错误：", err)
-		return nil
+	// 登录情况下，携带密码和随机盐写入登陆缓存
+	_, isLogin := tx.Get("login")
+	if isLogin {
+		jsonU, err := json.Marshal(*u)
+		if err != nil {
+			log.Println("json编码错误：", err)
+			// 继续后续缓存
+			goto std
+		}
+
+		err = LoginCache.Set(&cache.Item{
+			Key:   u.Name,
+			Value: jsonU,
+			TTL:   10 * time.Second,
+		})
+		if err != nil {
+			log.Println("用户登录缓存失败:", err)
+		}
 	}
 
-	err = LoginCache.Set(&cache.Item{
-		Key:   u.Name,
-		Value: jsonU,
-		TTL:   10 * time.Second,
-	})
-	if err != nil {
-		log.Println("用户登录缓存失败:", err)
-	}
-
+std:
 	// 敏感数据在保存到缓存前删除
 	user := *u
 	user.EraseSensitiveFiled()
+
 	jsonUser, err := json.Marshal(user)
 	if err != nil {
 		log.Println("json编码错误：", err)
