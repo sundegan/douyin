@@ -3,7 +3,6 @@ package controller
 import (
 	"douyin-server/dao"
 	"douyin-server/service"
-	"errors"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -19,7 +18,7 @@ type VideoListResponse struct {
 	VideoList []dao.Video `json:"video_list"`
 }
 
-// Publish check token then save upload file to public directory
+// Publish 获取用户投稿的视频并保存到本地
 func Publish(c *gin.Context) {
 	id, ok := getId(c)
 	if !ok {
@@ -27,6 +26,7 @@ func Publish(c *gin.Context) {
 		return
 	}
 
+	// 获取用户上传的视频
 	data, err := c.FormFile("data")
 	if err != nil {
 		c.JSON(http.StatusOK, Response{
@@ -37,9 +37,14 @@ func Publish(c *gin.Context) {
 	}
 
 	filename := filepath.Base(data.Filename)
+	// 视频文件的后缀，也即视频的格式
 	fileSuffix := filepath.Ext(data.Filename)
+	// 通过用户id和视频文件名拼接成最终存放的视频文件名
 	finalName := fmt.Sprintf("%d_%s", id, filename)
+	// 拼接存放视频的本地路径
 	saveFile := filepath.Join("./static-server/videos/", finalName)
+
+	// 保存视频文件到本地
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -48,15 +53,14 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	saveCover := filepath.Join("./static-server/covers/", strings.TrimSuffix(finalName, fileSuffix)+".jpg")
+	// 封面的文件名和最终存放的视频文件名一致，但由于封面是图片，所以把后缀改为jpg
+	covername := strings.TrimSuffix(finalName, fileSuffix) + ".jpg"
+	// 拼接存放封面的本地路径
+	saveCover := filepath.Join("./static-server/covers/", covername)
 
-	err = coverGenerator(saveFile, saveCover)
-	isGenerateOK := true
-	if err != nil {
-		fmt.Print(err)
-		isGenerateOK = false
-	}
-	if err = service.Publish(finalName, c.PostForm("title"), id, isGenerateOK); err != nil {
+	isGenerateOK := coverGenerator(saveFile, saveCover)
+
+	if err = service.Publish(finalName, covername, c.PostForm("title"), id, isGenerateOK); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
@@ -70,6 +74,7 @@ func Publish(c *gin.Context) {
 
 }
 
+// PublishList 返回用户的投稿视频列表
 func PublishList(c *gin.Context) {
 	_id := c.Query("user_id")
 	id, err := strconv.ParseInt(_id, 10, 64)
@@ -86,11 +91,9 @@ func PublishList(c *gin.Context) {
 	})
 }
 
-func coverGenerator(videoDst, coverDst string) error {
+// coverGenerator 会通过命令行调用ffmpeg提取视频的第一帧作为封面
+func coverGenerator(videoDst, coverDst string) bool {
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
 	err := cmd.Run()
-	if err != nil {
-		return errors.New("提取帧失败，使用默认封面")
-	}
-	return nil
+	return err == nil
 }
