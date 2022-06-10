@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,13 +38,12 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	filename := filepath.Base(data.Filename)
 	// 视频文件的后缀，也即视频的格式
 	fileSuffix := filepath.Ext(data.Filename)
-	// 通过用户id和视频文件名拼接成最终存放的视频文件名
-	finalName := fmt.Sprintf("%d_%s", id, filename)
+	// 通过用户id和当前时间戳拼接成最终存放的视频文件名
+	filename := fmt.Sprintf("%x_%x", id, time.Now().UnixNano())
 	// 拼接存放视频的本地路径
-	saveFile := filepath.Join("./static-server/videos/", finalName)
+	saveFile := filepath.Join("./static-server/videos/", filename)
 
 	// 保存视频文件到本地
 	if err := c.SaveUploadedFile(data, saveFile); err != nil {
@@ -54,14 +54,14 @@ func Publish(c *gin.Context) {
 		return
 	}
 
-	// 封面的文件名和最终存放的视频文件名一致，但由于封面是图片，所以把后缀改为jpg
-	covername := strings.TrimSuffix(finalName, fileSuffix) + ".jpg"
+	// 封面的文件名和最终存放的视频文件名一致，因为封面是图片，所以把后缀改为jpg
+	covername := strings.TrimSuffix(filename, fileSuffix) + ".jpg"
 	// 拼接存放封面的本地路径
 	saveCover := filepath.Join("./static-server/covers/", covername)
 
 	isGenerateOK := coverGenerator(saveFile, saveCover)
 
-	if err = service.Publish(finalName, covername, c.PostForm("title"), id, isGenerateOK); err != nil {
+	if err = service.Publish(filename, covername, c.PostForm("title"), id, isGenerateOK); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
@@ -70,7 +70,7 @@ func Publish(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, Response{
 		StatusCode: 0,
-		StatusMsg:  finalName + " uploaded successfully",
+		StatusMsg:  filename + " uploaded successfully",
 	})
 
 }
