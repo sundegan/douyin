@@ -26,7 +26,12 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	// 登录情况下，携带密码和随机盐写入登陆缓存
 	_, isLogin := tx.Get("login")
 	if isLogin {
-		jsonU, err := json.Marshal(*u)
+		user := *u
+		// 除去与密码验证无关的字段
+		user.TotalFavorited = 0
+		user.FavoriteCount = 0
+		user.Name = ""
+		jsonUser, err := json.Marshal(user)
 		if err != nil {
 			log.Println("json编码错误：", err)
 			// 继续后续缓存
@@ -35,7 +40,7 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 
 		err = LoginCache.Set(&cache.Item{
 			Key:   u.Name,
-			Value: jsonU,
+			Value: jsonUser,
 			TTL:   10 * time.Second,
 		})
 		if err != nil {
