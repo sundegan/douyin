@@ -8,7 +8,6 @@ const staticRouter = "http://122.9.113.111:8080/"
 
 // Publish 向数据库插入视频的记录
 func Publish(videoName, coverName, title string, userId int64, isGenerateOk bool) error {
-
 	v := dao.Video{
 		AuthorId: userId,
 		Title:    title,
