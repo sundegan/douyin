@@ -38,11 +38,8 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 	}
 
 	if actionType == "1" { //点赞视频
-		//通过从点赞关联表中查询结果，判断当前用户是否已点赞过该视频
-		rows, err := dao.DB.Table("favorites").Where("user_id = ? AND video_id = ?", userId, videoId).Rows()
-		if err != nil {
-			return err
-		}
+		//通过从点赞关联表中查询结果，判断当前用户是否已点赞过该视频，该错误可忽略
+		rows, _ := dao.DB.Table("favorites").Where("user_id = ? AND video_id = ?", userId, videoId).Rows()
 		if rows.Next() {
 			return errors.New("已点赞过该视频")
 		}
