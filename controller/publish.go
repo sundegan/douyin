@@ -41,7 +41,7 @@ func Publish(c *gin.Context) {
 	// 视频文件的后缀，也即视频的格式
 	fileSuffix := filepath.Ext(data.Filename)
 	// 通过用户id和当前时间戳拼接成最终存放的视频文件名
-	filename := fmt.Sprintf("%x_%x.%s", id, time.Now().UnixNano(), fileSuffix)
+	filename := fmt.Sprintf("%x_%x%s", id, time.Now().UnixNano(), fileSuffix)
 	// 拼接存放视频的本地路径
 	saveFile := filepath.Join("./static-server/videos/", filename)
 
