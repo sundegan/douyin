@@ -10,11 +10,11 @@ import (
 
 // ActionUser 关注列表和粉丝列表使用的数据结构
 type ActionUser struct {
+	IsFollow      bool   `json:"is_follow"`
 	Id            int64  `json:"id"`
-	Name          string `json:"name"`
 	FollowCount   int64  `json:"follow_count"`
 	FollowerCount int64  `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
+	Name          string `json:"name"`
 }
 
 // Action 对用户进行关注取关操作

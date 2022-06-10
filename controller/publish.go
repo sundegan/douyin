@@ -4,6 +4,7 @@ import (
 	"douyin-server/dao"
 	"douyin-server/service"
 	"fmt"
+	"log"
 	"net/http"
 	"os/exec"
 	"path/filepath"
@@ -95,5 +96,8 @@ func PublishList(c *gin.Context) {
 func coverGenerator(videoDst, coverDst string) bool {
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
 	err := cmd.Run()
+	if err != nil {
+		log.Println("生成帧出错：", err)
+	}
 	return err == nil
 }

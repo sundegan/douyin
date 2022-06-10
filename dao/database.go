@@ -31,7 +31,7 @@ const (
 func InitDB() {
 	var err error
 	dsn := "douyin_server:@tcp(localhost:3306)/" +
-		"douyin?charset=utf8&interpolateParams=true&parseTime=True&loc=Local"
+		"douyin?charset=utf8mb4&interpolateParams=true&parseTime=True&loc=Local"
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
 	})
@@ -43,13 +43,11 @@ func InitDB() {
 	log.Println(err)
 
 	RdbToken = redis.NewClient(&redis.Options{
-
 		DB: numTokenDB,
 	})
 
 	LoginCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
-
 			DB: numLoginCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(10000, time.Minute),
@@ -57,7 +55,6 @@ func InitDB() {
 
 	UserCache = cache.New(&cache.Options{
 		Redis: redis.NewClient(&redis.Options{
-
 			DB: numUserCacheDB,
 		}),
 		LocalCache: cache.NewTinyLFU(10000, time.Minute),
@@ -65,12 +62,10 @@ func InitDB() {
 
 	// 关注列表数据库
 	RdbFollow = redis.NewClient(&redis.Options{
-
 		DB: numFollowListDB,
 	})
 	// 粉丝列表数据库
 	RdbFans = redis.NewClient(&redis.Options{
-
 		DB: numFollowerListDB,
 	})
 }
