@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"douyin-server/dao"
 	"douyin-server/service"
 	"fmt"
@@ -41,12 +42,12 @@ func Publish(c *gin.Context) {
 	// 视频文件的后缀，也即视频的格式
 	fileSuffix := filepath.Ext(data.Filename)
 	// 通过用户id和当前时间戳拼接成最终存放的视频文件名
-	filename := fmt.Sprintf("%x_%x%s", id, time.Now().UnixNano(), fileSuffix)
+	filename := fmt.Sprintf("%x_%x%s", id, time.Now().Unix(), fileSuffix)
 	// 拼接存放视频的本地路径
 	saveFile := filepath.Join("./static-server/videos/", filename)
 
 	// 保存视频文件到本地
-	if err := c.SaveUploadedFile(data, saveFile); err != nil {
+	if err = c.SaveUploadedFile(data, saveFile); err != nil {
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			StatusMsg:  err.Error(),
@@ -72,7 +73,6 @@ func Publish(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  filename + " uploaded successfully",
 	})
-
 }
 
 // PublishList 返回用户的投稿视频列表
@@ -95,9 +95,11 @@ func PublishList(c *gin.Context) {
 // coverGenerator 会通过命令行调用ffmpeg提取视频的第一帧作为封面
 func coverGenerator(videoDst, coverDst string) bool {
 	cmd := exec.Command("ffmpeg", "-ss", "00:00:00", "-i", videoDst, "-vframes", "1", coverDst)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Println("生成帧出错：", err)
+		log.Println("生成帧出错：", err, ",", stderr.String())
 	}
 	return err == nil
 }
