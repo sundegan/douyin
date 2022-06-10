@@ -46,13 +46,15 @@ func RelationAction(c *gin.Context) {
 // FollowList 返回用户的关注列表
 func FollowList(c *gin.Context) {
 	// 获取用户id
-	userId, ok := getId(c)
-	if !ok {
+	_id := c.Query("user_id")
+	id, err := strconv.ParseInt(_id, 10, 64)
+	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}
+	
 	// 调用service层FollowList函数获得该用户的关注列表
-	userList, err := service.FollowList(userId)
+	userList, err := service.FollowList(id)
 	if err != nil {
 		c.JSON(http.StatusOK, UserListResponse{
 			Response: Response{
@@ -73,13 +75,15 @@ func FollowList(c *gin.Context) {
 // FollowerList 返回用户的粉丝列表
 func FollowerList(c *gin.Context) {
 	// 获取用户id
-	userId, ok := getId(c)
-	if !ok {
+	_id := c.Query("user_id")
+	id, err := strconv.ParseInt(_id, 10, 64)
+	if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "获取用户id失败，请重试"})
 		return
 	}
+
 	// 调用service层FollowerList函数获得该用户的粉丝列表
-	userList, err := service.FollowerList(userId)
+	userList, err := service.FollowerList(id)
 	if err != nil {
 		c.JSON(http.StatusOK, UserListResponse{
 			Response: Response{
