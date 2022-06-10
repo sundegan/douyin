@@ -21,14 +21,14 @@ type ActionUser struct {
 func Action(userId int64, toUserId int64, actionType string) error {
 	// 判断当前用户是否存在
 	user := dao.User{}
-	err := dao.DB.Where("id = ?", userId).Find(&user).Error
+	err := dao.DB.Model(&dao.User{}).Where("id = ?", userId).Find(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("执行关注和取关操作的用户不存在")
 	}
 
 	// 判断关注用户是否存在
 	toUser := dao.User{}
-	err = dao.DB.Where("id = ?", toUserId).Find(&toUser).Error
+	err = dao.DB.Model(&dao.User{}).Where("id = ?", toUserId).Find(&toUser).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("关注的用户不存在")
 	}
