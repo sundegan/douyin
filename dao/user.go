@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"github.com/go-redis/cache/v8"
 	"gorm.io/gorm"
 	"log"
@@ -19,6 +20,36 @@ type User struct {
 	Salt           string `json:"salt,omitempty" gorm:"type:char(4)"`
 	Name           string `json:"name,omitempty" gorm:"type:varchar(32); index"`
 	Pwd            string `json:"pwd,omitempty" gorm:"type:char(60)"`
+}
+
+// BeforeSave 修改前进行延迟双删第一删
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+	_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	return nil
+}
+
+// AfterSave 修改后进行延迟双删第二删
+func (u *User) AfterSave(tx *gorm.DB) (err error) {
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	}()
+	return nil
+}
+
+// BeforeUpdate 修改前进行延迟双删第一删
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
+	_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	return nil
+}
+
+// AfterUpdate 修改后进行延迟双删第二删
+func (u *User) AfterUpdate(tx *gorm.DB) (err error) {
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	}()
+	return nil
 }
 
 // AfterFind 查询完后进行写缓存
@@ -41,7 +72,7 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 		err = LoginCache.Set(&cache.Item{
 			Key:   u.Name,
 			Value: jsonUser,
-			TTL:   10 * time.Second,
+			TTL:   30 * time.Second,
 		})
 		if err != nil {
 			log.Println("用户登录缓存失败:", err)
@@ -62,7 +93,7 @@ std:
 	err = UserCache.Set(&cache.Item{
 		Key:   strconv.FormatInt(u.Id, 10),
 		Value: jsonUser,
-		TTL:   10 * time.Second,
+		TTL:   30 * time.Second,
 	})
 	if err != nil {
 		log.Println("用户信息缓存失败:", err)
@@ -86,7 +117,7 @@ func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	err = UserCache.Set(&cache.Item{
 		Key:   strconv.FormatInt(u.Id, 10),
 		Value: jsonUser,
-		TTL:   10 * time.Second,
+		TTL:   30 * time.Second,
 	})
 	if err != nil {
 		log.Println("用户信息缓存失败:", err)

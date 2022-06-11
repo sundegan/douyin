@@ -62,7 +62,7 @@ func Register(username, password string) (id int64, err error) {
 	}
 
 	user := dao.User{}
-	dao.DB.Where("name = ?", username).Find(&user)
+	dao.DB.Model(&dao.User{}).Where("name = ?", username).Find(&user)
 	if user.Id != 0 {
 		return 0, errors.New("用户已存在")
 	}
@@ -81,7 +81,7 @@ func Register(username, password string) (id int64, err error) {
 	}
 	user.Pwd = string(pwd)
 
-	dao.DB.Create(&user)
+	dao.DB.Model(&dao.User{}).Create(&user)
 
 	// 布隆过滤器中加入新用户的用户名
 	userFilter.AddString(username)
@@ -123,6 +123,7 @@ func Login(username, password string) (id int64, err error) {
 	return user.Id, nil
 }
 
+// UserInfo 根据用户id获取用户除敏感字段外的完整信息
 func UserInfo(id int64) (user dao.User, err error) {
 	// 先尝试查缓存，不命中再查数据库
 	cacheMissed := false

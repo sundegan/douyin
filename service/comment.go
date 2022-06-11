@@ -10,14 +10,10 @@ import (
 // Comment 新增评论
 func Comment(videoId int64, userId int64, commentText string) (comment dao.Comment, err error) {
 	// 判断进行评论的用户是否存在
-	user := dao.User{}
-	err = dao.DB.Model(&dao.User{}).Where("id = ?", userId).Find(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	user, err := UserInfo(userId)
+	if err != nil {
 		return comment, errors.New("执行评论操作的用户不存在")
 	}
-
-	// 去除评论用户的敏感信息
-	user.EraseSensitiveFiled()
 
 	// 判断video是否存在
 	video := dao.Video{}

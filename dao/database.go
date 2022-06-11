@@ -42,30 +42,40 @@ func InitDB() {
 	err = DB.AutoMigrate(&User{}, &Video{}, &Favorite{}, &Comment{})
 	log.Println(err)
 
-	RdbToken = redis.NewClient(&redis.Options{
-		DB: numTokenDB,
+	RdbToken = redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    "mymaster",
+		SentinelAddrs: []string{":17000", ":17001", ":17002"},
+		DB:            numTokenDB,
 	})
 
 	LoginCache = cache.New(&cache.Options{
-		Redis: redis.NewClient(&redis.Options{
-			DB: numLoginCacheDB,
+		Redis: redis.NewFailoverClient(&redis.FailoverOptions{
+			MasterName:    "mymaster",
+			SentinelAddrs: []string{":17000", ":17001", ":17002"},
+			DB:            numLoginCacheDB,
 		}),
-		LocalCache: cache.NewTinyLFU(10000, time.Minute),
+		LocalCache: cache.NewTinyLFU(1000, time.Minute),
 	})
 
 	UserCache = cache.New(&cache.Options{
-		Redis: redis.NewClient(&redis.Options{
-			DB: numUserCacheDB,
+		Redis: redis.NewFailoverClient(&redis.FailoverOptions{
+			MasterName:    "mymaster",
+			SentinelAddrs: []string{":17000", ":17001", ":17002"},
+			DB:            numUserCacheDB,
 		}),
-		LocalCache: cache.NewTinyLFU(10000, time.Minute),
+		LocalCache: cache.NewTinyLFU(1000, time.Minute),
 	})
 
 	// 关注列表数据库
-	RdbFollow = redis.NewClient(&redis.Options{
-		DB: numFollowListDB,
+	RdbFollow = redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    "mymaster",
+		SentinelAddrs: []string{":17000", ":17001", ":17002"},
+		DB:            numFollowListDB,
 	})
 	// 粉丝列表数据库
-	RdbFans = redis.NewClient(&redis.Options{
-		DB: numFollowerListDB,
+	RdbFans = redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    "mymaster",
+		SentinelAddrs: []string{":17000", ":17001", ":17002"},
+		DB:            numFollowerListDB,
 	})
 }
