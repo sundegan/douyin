@@ -74,42 +74,45 @@ func Action(userId int64, toUserId int64, actionType string) error {
 }
 
 // FollowList 返回用户的关注列表
-func FollowList(userId int64) ([]ActionUser, error) {
+func FollowList(curUserId, targetUserId int64) ([]ActionUser, error) {
 	var userList []ActionUser
-	// 从Redis的DB1获取该用户关注的所有用户id
-	userIdList := dao.RdbFollow.HKeys(context.Background(), strconv.FormatInt(userId, 10)).Val()
+	// 从Redis的DB1获取目标用户关注的所有用户id
+	userIdList := dao.RdbFollow.HKeys(context.Background(), strconv.FormatInt(targetUserId, 10)).Val()
 	// 遍历用户id,填充关注列表中用户的数据
 	for _, id := range userIdList {
 		var actionUser ActionUser
 		actionUser.Id, _ = strconv.ParseInt(id, 10, 64)
-		actionUser.Name = dao.RdbFollow.HGet(context.Background(), strconv.FormatInt(userId, 10), id).Val() // 用户的名称
-		actionUser.FollowCount = dao.RdbFollow.HLen(context.Background(), id).Val()                         // 用户的关注总数
-		actionUser.FollowerCount = dao.RdbFans.HLen(context.Background(), id).Val()                         // 用户的粉丝总数
-		actionUser.IsFollow = true                                                                          // 在关注列表中的用户都为关注状态
+		actionUser.Name = dao.RdbFollow.HGet(context.Background(), strconv.FormatInt(targetUserId, 10), id).Val() // 用户的名称
+		actionUser.FollowCount = dao.RdbFollow.HLen(context.Background(), id).Val()                               // 用户的关注总数
+		actionUser.FollowerCount = dao.RdbFans.HLen(context.Background(), id).Val()                               // 用户的粉丝总数
+		// 未登录
+		if curUserId == 0 {
+			actionUser.IsFollow = false
+		} else {
+			actionUser.IsFollow = dao.RdbFollow.HExists(context.Background(), strconv.FormatInt(curUserId, 10), id).Val()
+		}
 		userList = append(userList, actionUser)
 	}
 	return userList, nil
 }
 
 // FollowerList 返回用户的粉丝列表
-func FollowerList(userId int64) ([]ActionUser, error) {
+func FollowerList(curUserId, targetUserId int64) ([]ActionUser, error) {
 	var userList []ActionUser
 	// 从Redis的DB2获取该用户的所有粉丝id
-	userIdList := dao.RdbFans.HKeys(context.Background(), strconv.FormatInt(userId, 10)).Val()
+	userIdList := dao.RdbFans.HKeys(context.Background(), strconv.FormatInt(targetUserId, 10)).Val()
 	// 遍历粉丝id,填充粉丝列表中用户的数据
 	for _, id := range userIdList {
 		var actionUser ActionUser
 		actionUser.Id, _ = strconv.ParseInt(id, 10, 64)
-		actionUser.Name = dao.RdbFans.HGet(context.Background(), strconv.FormatInt(userId, 10), id).Val() // 用户的名称
-		actionUser.FollowCount = dao.RdbFollow.HLen(context.Background(), id).Val()                       // 用户的关注总数
-		actionUser.FollowerCount = dao.RdbFans.HLen(context.Background(), id).Val()                       // 用户的粉丝总数
-
-		// 判断是否互粉
-		followed := dao.RdbFollow.HExists(context.Background(), strconv.FormatInt(userId, 10), id).Val()
-		if followed { // 互粉,则is_follow字段设为true
-			actionUser.IsFollow = true
-		} else {
+		actionUser.Name = dao.RdbFans.HGet(context.Background(), strconv.FormatInt(targetUserId, 10), id).Val() // 用户的名称
+		actionUser.FollowCount = dao.RdbFollow.HLen(context.Background(), id).Val()                             // 用户的关注总数
+		actionUser.FollowerCount = dao.RdbFans.HLen(context.Background(), id).Val()                             // 用户的粉丝总数
+		// 未登录
+		if curUserId == 0 {
 			actionUser.IsFollow = false
+		} else {
+			actionUser.IsFollow = dao.RdbFollow.HExists(context.Background(), strconv.FormatInt(curUserId, 10), id).Val()
 		}
 		userList = append(userList, actionUser)
 	}
