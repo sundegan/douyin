@@ -5,6 +5,7 @@ import (
 	"context"
 	"douyin-server/dao"
 	"errors"
+	"fmt"
 	"github.com/bits-and-blooms/bloom/v3"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -16,28 +17,31 @@ import (
 )
 
 var (
-	userFilter *bloom.BloomFilter
+	userNameFilter *bloom.BloomFilter
+	userIdFilter   *bloom.BloomFilter
 )
 
 // InitUser 等dao包初始化完才能初始化
 func InitUser() {
 	// 支持10000000个用户
-	userFilter = bloom.NewWithEstimates(1e7, 0.01)
+	userIdFilter = bloom.NewWithEstimates(1e7, 0.01)
+	userNameFilter = bloom.NewWithEstimates(1e7, 0.01)
 
-	rows, err := dao.DB.Model(dao.User{}).Select("name").Rows()
+	rows, err := dao.DB.Model(dao.User{}).Select("id", "name").Rows()
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 
 	// 将数据库中所有用户名存在布隆过滤器中
-	var name string
+	var id, name string
 	for rows.Next() {
-		err = rows.Scan(&name)
+		err = rows.Scan(&id, &name)
 		if err != nil {
 			log.Println("读取用户名到布隆过滤器时发生错误：", err)
 		}
-		userFilter.AddString(name)
+		userIdFilter.AddString(id)
+		userNameFilter.AddString(name)
 	}
 }
 
@@ -83,15 +87,16 @@ func Register(username, password string) (id int64, err error) {
 
 	dao.DB.Model(&dao.User{}).Create(&user)
 
-	// 布隆过滤器中加入新用户的用户名
-	userFilter.AddString(username)
+	// 布隆过滤器中加入新用户
+	userIdFilter.AddString(strconv.FormatInt(user.Id, 10))
+	userNameFilter.AddString(username)
 
 	return user.Id, nil
 }
 
 func Login(username, password string) (id int64, err error) {
 	// 先查布隆过滤器，不存在直接返回错误，降低数据库的压力
-	if !userFilter.TestString(username) {
+	if !userNameFilter.TestString(username) {
 		return 0, errors.New("用户名或密码错误")
 	}
 
@@ -125,32 +130,81 @@ func Login(username, password string) (id int64, err error) {
 
 // UserInfo 根据用户id获取用户除敏感字段外的完整信息
 func UserInfo(id int64) (user dao.User, err error) {
-	// 先尝试查缓存，不命中再查数据库
-	cacheMissed := false
-	var buf []byte
-	err = dao.UserCache.Get(context.Background(), strconv.FormatInt(id, 10), &buf)
-	if err == nil {
-		err = json.Unmarshal(buf, &user)
-		if err != nil {
-			cacheMissed = true
-		}
-	} else {
-		cacheMissed = true
-	}
-	if cacheMissed {
-		err = dao.DB.Where("id = ?", id).Find(&user).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return user, errors.New("用户不存在")
-		}
+	// 先查布隆过滤器，过滤不存在的id
+	if !userIdFilter.TestString(strconv.FormatInt(id, 10)) {
+		return user, errors.New("用户不存在")
 	}
 
-	userId := strconv.FormatInt(user.Id, 10)
+	// 分别获取各个字段
+	val, err := UserInfoByField(id, "Name")
+	if err != nil {
+		return
+	}
+	user.Name = val
+
+	val, err = UserInfoByField(id, "TotalFavorited")
+	if err != nil {
+		return
+	}
+	user.TotalFavorited, err = strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return
+	}
+
+	val, err = UserInfoByField(id, "FavoriteCount")
+	if err != nil {
+		return
+	}
+	user.FavoriteCount, err = strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return
+	}
+
+	userId := strconv.FormatInt(id, 10)
 	user.FollowCount = dao.RdbFollow.HLen(context.Background(), userId).Val() // 用户的关注总数
 	user.FollowerCount = dao.RdbFans.HLen(context.Background(), userId).Val() // 用户的粉丝总数
 
-	user.EraseSensitiveFiled()
+	user.Id = id
 
 	return user, nil
+}
+
+// UserInfoByField 先查缓存再查数据库获得用户指定字段数据
+func UserInfoByField(id int64, field string) (val string, err error) {
+	if field == "Name" {
+		err = dao.UserCache.Get(context.Background(), fmt.Sprintf("%d:Name", id), &val)
+		if err != nil {
+			err = dao.DB.Model(&dao.User{Id: id}).Where("id = ?", id).Select("name").Find(&val).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return "", errors.New("用户不存在")
+			}
+		}
+		return
+	}
+
+	if field == "TotalFavorited" {
+		err = dao.UserCache.Get(context.Background(), fmt.Sprintf("%d:TotalFavorited", id), &val)
+		if err != nil {
+			err = dao.DB.Model(&dao.User{Id: id}).Where("id = ?", id).Select("total_favorited").Find(&val).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return "", errors.New("用户不存在")
+			}
+		}
+		return
+	}
+
+	if field == "FavoriteCount" {
+		err = dao.UserCache.Get(context.Background(), fmt.Sprintf("%d:FavoriteCount", id), &val)
+		if err != nil {
+			err = dao.DB.Model(&dao.User{Id: id}).Where("id = ?", id).Select("favorite_count").Find(&val).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return "", errors.New("用户不存在")
+			}
+		}
+		return
+	}
+
+	return "", errors.New("UserInfoByField：field传入了非法参数")
 }
 
 // CreateToken 生成随机token，并存储到redis中，返回token

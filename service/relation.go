@@ -4,7 +4,6 @@ import (
 	"context"
 	"douyin-server/dao"
 	"errors"
-	"gorm.io/gorm"
 	"strconv"
 )
 
@@ -20,16 +19,14 @@ type ActionUser struct {
 // Action 对用户进行关注取关操作
 func Action(userId int64, toUserId int64, actionType string) error {
 	// 判断当前用户是否存在
-	user := dao.User{}
-	err := dao.DB.Model(&dao.User{}).Where("id = ?", userId).Find(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("执行关注和取关操作的用户不存在")
+	userName, err := UserInfoByField(userId, "Name")
+	if err != nil {
+		return errors.New("执行关注或取关操作的用户不存在")
 	}
 
 	// 判断关注用户是否存在
-	toUser := dao.User{}
-	err = dao.DB.Model(&dao.User{}).Where("id = ?", toUserId).Find(&toUser).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	toUserName, err := UserInfoByField(toUserId, "Name")
+	if err != nil {
 		return errors.New("关注的用户不存在")
 	}
 
@@ -44,14 +41,14 @@ func Action(userId int64, toUserId int64, actionType string) error {
 				context.Background(),
 				strconv.FormatInt(userId, 10),
 				strconv.FormatInt(toUserId, 10),
-				toUser.Name,
+				toUserName,
 			)
 			// 粉丝列表增加数据
 			dao.RdbFans.HSet(
 				context.Background(),
 				strconv.FormatInt(toUserId, 10),
 				strconv.FormatInt(userId, 10),
-				user.Name,
+				userName,
 			)
 		}
 	} else if actionType == "2" { // 取关操作

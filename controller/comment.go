@@ -78,7 +78,6 @@ func CommentAction(c *gin.Context) {
 
 // CommentList 获取评论列表
 func CommentList(c *gin.Context) {
-
 	//确认视频id无误
 	videoId, err := strconv.ParseInt(c.Query("video_id"), 10, 64)
 	if err != nil {

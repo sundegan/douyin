@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/cache/v8"
 	"gorm.io/gorm"
 	"log"
@@ -22,32 +23,32 @@ type User struct {
 	Pwd            string `json:"pwd,omitempty" gorm:"type:char(60)"`
 }
 
-// BeforeSave 修改前进行延迟双删第一删
+// BeforeSave 进行延迟双删第一删
 func (u *User) BeforeSave(tx *gorm.DB) (err error) {
-	_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	u.deleteFromCache()
 	return nil
 }
 
-// AfterSave 修改后进行延迟双删第二删
+// AfterSave 进行延迟双删第二删
 func (u *User) AfterSave(tx *gorm.DB) (err error) {
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+		u.deleteFromCache()
 	}()
 	return nil
 }
 
-// BeforeUpdate 修改前进行延迟双删第一删
+// BeforeUpdate 进行延迟双删第一删
 func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
-	_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+	u.deleteFromCache()
 	return nil
 }
 
-// AfterUpdate 修改后进行延迟双删第二删
+// AfterUpdate 进行延迟双删第二删
 func (u *User) AfterUpdate(tx *gorm.DB) (err error) {
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		_ = UserCache.Delete(context.Background(), strconv.FormatInt(u.Id, 10))
+		u.deleteFromCache()
 	}()
 	return nil
 }
@@ -80,53 +81,58 @@ func (u *User) AfterFind(tx *gorm.DB) (err error) {
 	}
 
 std:
-	// 敏感数据在保存到缓存前删除
-	user := *u
-	user.EraseSensitiveFiled()
+	u.saveIntoCache()
 
-	jsonUser, err := json.Marshal(user)
-	if err != nil {
-		log.Println("json编码错误：", err)
-		return nil
-	}
-
-	err = UserCache.Set(&cache.Item{
-		Key:   strconv.FormatInt(u.Id, 10),
-		Value: jsonUser,
-		TTL:   30 * time.Second,
-	})
-	if err != nil {
-		log.Println("用户信息缓存失败:", err)
-	}
 	// 无论是否成功写缓存，继续完成事务
 	return nil
 }
 
 // AfterCreate 创建完后进行写缓存
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {
-	// 敏感数据在保存到缓存前删除
-	user := *u
-	user.EraseSensitiveFiled()
+	u.saveIntoCache()
 
-	jsonUser, err := json.Marshal(user)
-	if err != nil {
-		log.Println("json编码错误：", err)
-		return nil
-	}
-
-	err = UserCache.Set(&cache.Item{
-		Key:   strconv.FormatInt(u.Id, 10),
-		Value: jsonUser,
-		TTL:   30 * time.Second,
-	})
-	if err != nil {
-		log.Println("用户信息缓存失败:", err)
-	}
 	// 无论是否成功写缓存，继续完成事务
 	return nil
 }
 
-func (u *User) EraseSensitiveFiled() {
-	u.Pwd = ""
-	u.Salt = ""
+// 将除密码和随机盐外的字段放入缓存中
+func (u *User) saveIntoCache() {
+	if u.Name != "" {
+		err := UserCache.Set(&cache.Item{
+			Key:   fmt.Sprintf("%d:Name", u.Id),
+			Value: u.Name,
+			TTL:   time.Minute,
+		})
+		if err != nil {
+			log.Println("用户信息缓存失败:", err)
+		}
+	}
+
+	if u.TotalFavorited != 0 {
+		err := UserCache.Set(&cache.Item{
+			Key:   fmt.Sprintf("%d:TotalFavorited", u.Id),
+			Value: strconv.FormatInt(u.TotalFavorited, 10),
+			TTL:   time.Minute,
+		})
+		if err != nil {
+			log.Println("用户信息缓存失败:", err)
+		}
+	}
+
+	if u.FavoriteCount != 0 {
+		err := UserCache.Set(&cache.Item{
+			Key:   fmt.Sprintf("%d:FavoriteCount", u.Id),
+			Value: strconv.FormatInt(u.FavoriteCount, 10),
+			TTL:   time.Minute,
+		})
+		if err != nil {
+			log.Println("用户信息缓存失败:", err)
+		}
+	}
+}
+
+func (u *User) deleteFromCache() {
+	_ = UserCache.Delete(context.Background(), fmt.Sprintf("%d:Name", u.Id))
+	_ = UserCache.Delete(context.Background(), fmt.Sprintf("%d:TotalFavorited", u.Id))
+	_ = UserCache.Delete(context.Background(), fmt.Sprintf("%d:FavoriteCount", u.Id))
 }

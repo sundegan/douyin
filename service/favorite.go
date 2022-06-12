@@ -4,32 +4,38 @@ import (
 	"douyin-server/dao"
 	"errors"
 	"gorm.io/gorm"
+	"strconv"
 )
 
 // Favorite 点赞/取消点赞视频
-func Favorite(videoId int64, userId int64, actionType string) error {
+func Favorite(videoId int64, userId int64, actionType string) (err error) {
 	video := dao.Video{}
 
 	// 判断video是否存在
-	err := dao.DB.Model(&dao.Video{}).Where("id = ?", videoId).
+	err = dao.DB.Model(&dao.Video{}).Where("id = ?", videoId).
 		Select("author_id", "favorite_count").Find(&video).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return errors.New("点赞的视频不存在")
 	}
 
 	// 获取当前用户点赞视频总数以及视频作者被点赞总数
-	userFavoriteCount, authorTotalFavorited := 0, 0
-	err = dao.DB.Model(&dao.User{}).Where("id = ?", userId).
-		Select("favorite_count").Find(&userFavoriteCount).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	_userFavoriteCount, err := UserInfoByField(userId, "FavoriteCount")
+	if err != nil {
 		return errors.New("执行点赞操作的用户不存在")
+	}
+	userFavoriteCount, err := strconv.ParseInt(_userFavoriteCount, 10, 64)
+	if err != nil {
+		return
 	}
 
 	// 获取视频作者信息
-	err = dao.DB.Model(&dao.User{}).Where("id = ?", video.AuthorId).
-		Select("total_favorited").Find(&authorTotalFavorited).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	_authorTotalFavorited, err := UserInfoByField(video.AuthorId, "TotalFavorited")
+	if err != nil {
 		return errors.New("视频的作者不存在")
+	}
+	authorTotalFavorited, err := strconv.ParseInt(_authorTotalFavorited, 10, 64)
+	if err != nil {
+		return
 	}
 
 	if actionType == "1" { //点赞视频
@@ -94,7 +100,7 @@ func Favorite(videoId int64, userId int64, actionType string) error {
 func FavoriteList(userId int64) ([]dao.Video, error) {
 	//依据用户id查询当前用户点赞的所有视频的视频id，存入favorite数组
 	favorite := []dao.Favorite{}
-	err := dao.DB.Where("user_id = ?", userId).Find(&favorite).Error
+	err := dao.DB.Model(&dao.Favorite{}).Where("user_id = ?", userId).Find(&favorite).Error
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +108,7 @@ func FavoriteList(userId int64) ([]dao.Video, error) {
 	videoList := []dao.Video{}
 	for _, f := range favorite {
 		video := dao.Video{}
-		err = dao.DB.Where("id = ?", f.VideoId).Find(&video).Error
+		err = dao.DB.Model(&dao.Video{}).Where("id = ?", f.VideoId).Find(&video).Error
 		if err != nil {
 			return nil, err
 		}

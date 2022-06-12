@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	rand.Seed(time.Now().UnixNano())
 
 	dao.InitDB()

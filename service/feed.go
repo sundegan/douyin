@@ -20,14 +20,11 @@ func Feed(id int64, latestTime int64) (videoList []dao.Video, nextTime int64) {
 	nextTime = videoList[len(videoList)-1].CreatedAt.UnixMilli() - 1
 
 	for i := range videoList {
-		// 去除视频中Author字段敏感信息
-		videoList[i].Author.EraseSensitiveFiled()
+		// 此处错误可忽略
+		author, _ := UserInfo(videoList[i].AuthorId)
+		videoList[i].Author = author
 		// 说明当前用户已登录
 		if id != 0 {
-			// 此处错误可忽略
-			author, _ := UserInfo(videoList[i].AuthorId)
-			videoList[i].Author = author
-
 			// 点赞，该错误可忽略
 			rows, _ := dao.DB.Model(&dao.Favorite{}).Where("user_id = ? AND video_id = ?", id, videoList[i].Id).Rows()
 			if rows.Next() {

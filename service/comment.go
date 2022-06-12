@@ -80,7 +80,7 @@ func CommentList(videoId int64) (returnList []dao.Comment, err error) {
 		return nil, err
 	}
 
-	// 用video_id获取评论列表，按发布日期进行降序排序
+	// 用videoId获取评论列表，按发布日期进行降序排序
 	var commentList []dao.Comment //comment表
 	err = dao.DB.Model(&dao.Comment{}).Where("video_id = ?", videoId).Order("create_date DESC").Find(&commentList).Error
 	if err != nil {
@@ -97,7 +97,6 @@ func CommentList(videoId int64) (returnList []dao.Comment, err error) {
 		if err != nil {
 			return nil, err
 		}
-		user.EraseSensitiveFiled()
 		x.User = user
 		returnList = append(returnList, x)
 	}
