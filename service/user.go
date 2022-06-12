@@ -171,6 +171,11 @@ func UserInfo(id int64) (user dao.User, err error) {
 
 // UserInfoByField 先查缓存再查数据库获得用户指定字段数据
 func UserInfoByField(id int64, field string) (val string, err error) {
+	// 先查布隆过滤器，过滤不存在的id
+	if !userIdFilter.TestString(strconv.FormatInt(id, 10)) {
+		return "", errors.New("用户不存在")
+	}
+	
 	if field == "Name" {
 		err = dao.UserCache.Get(context.Background(), fmt.Sprintf("%d:Name", id), &val)
 		if err != nil {
