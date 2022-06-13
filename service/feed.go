@@ -10,7 +10,7 @@ import (
 // Feed 选择发布时间在latestTime之前的视频
 func Feed(id int64, latestTime int64) (videoList []dao.Video, nextTime int64) {
 	timeStamp := time.UnixMilli(latestTime)
-	dao.DB.Model(&dao.Video{}).Preload("Author").Where("created_at <= ?", timeStamp).Order("created_at desc").Limit(30).Find(&videoList)
+	dao.DB.Model(&dao.Video{}).Preload("Author").Where("created_at <= ?", timeStamp).Order("created_at desc").Limit(10).Find(&videoList)
 
 	// 没有视频，返回空
 	if len(videoList) == 0 {

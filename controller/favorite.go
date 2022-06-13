@@ -4,6 +4,7 @@ import (
 	"douyin-server/service"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"strconv"
@@ -29,8 +30,8 @@ func FavoriteAction(c *gin.Context) {
 	actionType := c.Query("action_type")
 
 	err = service.Favorite(videoId, id, actionType)
-	if err == errors.New("已点赞过该视频") {
-		c.JSON(http.StatusOK, Response{StatusCode: 0, StatusMsg: "已点赞过该视频"})
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: "用户或视频不存在！"})
 	} else if err != nil {
 		c.JSON(http.StatusOK, Response{StatusCode: 1, StatusMsg: err.Error()})
 	} else {

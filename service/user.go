@@ -175,7 +175,7 @@ func UserInfoByField(id int64, field string) (val string, err error) {
 	if !userIdFilter.TestString(strconv.FormatInt(id, 10)) {
 		return "", errors.New("用户不存在")
 	}
-	
+
 	if field == "Name" {
 		err = dao.UserCache.Get(context.Background(), fmt.Sprintf("%d:Name", id), &val)
 		if err != nil {
